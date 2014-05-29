@@ -133,7 +133,7 @@ cd contrib; make; sudo make install
 
 
 
-- Set up a simple database (http://www.postgresql.org/docs/9.3/interactive/app-initdb.html and http://www.postgresql.org/docs/9.3/interactive/sql-createdatabase.html)
+- Set up a the databasecluster and a database using **initdb** and connect to it with  **psql** (http://www.postgresql.org/docs/9.3/interactive/app-initdb.html and http://www.postgresql.org/docs/9.3/interactive/sql-createdatabase.html)
 
 - Locate your **postgres.conf** configuration file by starting up the **PostgreSQL Server** and then typing the following command in the **psql** client: 
 
