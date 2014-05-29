@@ -44,7 +44,7 @@ This simple function would generate the following **flow** and **dependence grap
 - Download the _igraph_ library and install it to your local system. You can use the following link:
 http://igraph.org/nightly/get/c/igraph-0.7.1.tar.gz
 
-- Download the _PostgresSQL_ sources e.g. via **git** from http://git.postgresql.org/gitweb/ (More details are given here: https://wiki.postgresql.org/wiki/Working_with_Git)
+- Download the _PostgresSQL_ sources e.g. via **git** from [git://git.postgresql.org/git/postgresql.git] (More details are given here: https://wiki.postgresql.org/wiki/Working_with_Git)
 
 
 ##Installation
