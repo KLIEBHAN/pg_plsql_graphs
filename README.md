@@ -12,10 +12,28 @@ Its main purpuse is to:
 
 ##Examples
 
-###Flow Graph example
+###Example 1
+
+The following shows a snippet of a simple **plpgsql function**
+
+```Sql
+...
+BEGIN
+	a := b + c;
+	if not a > 10 then
+		d := b * e;
+		e := d + 1;
+	end if;
+	d := e / 2;
+	return d;	
+END;
+...
+```
+
+This function generates the following **flow** and **dependence graphs*.
+
 
 ![Flow Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/flow.png)
-###Dependence Graph example
 
 
 ![Dep. Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/dep.png)
