@@ -13,10 +13,8 @@ OBJS	= pg_plsql_graphs.o pg_plsql_graph_ops.o pg_plsql_plstmts2graph.o pg_plsql_
 EXTENSION = pg_plsql_graphs
 DATA = pg_plsql_graphs--1.0.sql pg_plsql_graphs--unpackaged--1.0.sql
 
-PG_CPPFLAGS = -ligraph
-PG_LIBS = -ligraph
 SHLIB_LINK = -ligraph
-PG_CPPFLAGS  += -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include/server -ligraph
+PG_CPPFLAGS  += -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include/server 
 
 
 
