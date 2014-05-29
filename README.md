@@ -131,9 +131,7 @@ autoconf; ./configure --with-igraph   --prefix=<INSTALLDIR>; make; make install
 cd contrib; make; make install
 ```
 
-
-
-- Set up a the databasecluster and a database using **initdb** and connect to it with  **psql** (http://www.postgresql.org/docs/9.3/interactive/app-initdb.html and http://www.postgresql.org/docs/9.3/interactive/sql-createdatabase.html)
+- If you didn't already set up a the databasecluster and a database, do it using **initdb** and connect to it with  **psql** (http://www.postgresql.org/docs/9.3/interactive/app-initdb.html and http://www.postgresql.org/docs/9.3/interactive/sql-createdatabase.html)
 
 - Locate your **postgres.conf** configuration file by starting up the **PostgreSQL Server** and then typing the following command in the **psql** client: 
 
