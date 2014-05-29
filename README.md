@@ -66,7 +66,7 @@ cd ./contrib; git clone https://github.com/BA-KLI/pg_plsql_graphs.git
 
 - Edit the Makefile in the contrib folder and add pg_plsql_graphs	to the SUBDIRS
 
-```
+```C
 ...
 SUBDIRS = \
 		pg_plsql_graphs	\
@@ -103,7 +103,7 @@ Usage:
 
 - Start up psql and type 
 
-```
+```Sql
 CREATE EXTENSION pg_plsql_graphs;
 ```
 
@@ -111,7 +111,7 @@ CREATE EXTENSION pg_plsql_graphs;
 
 - You can query this view e.g. by typing: 
 
-```
+```Sql
 SELECT * FROM pg_plsql_graphs;
 ```
 
@@ -119,7 +119,7 @@ SELECT * FROM pg_plsql_graphs;
 
 - In order to export a graph to a external file (e.g. to convert it to png) you can use the COPY function. The following commands will copy the flow graph and the depence graph of the last called plpgsql function to external dot files. To do that the views pg_plsql_last_flowgraph_dot and  pg_plsql_last_pdgs_dot are used.
 
-```
+```Sql
 \COPY (select * from pg_plsql_last_flowgraph_dot)  TO 'flow.dot';
 \COPY (select * from pg_plsql_last_pdgs_dot)  TO 'pdg.dot';
 ```
