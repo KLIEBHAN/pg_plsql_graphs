@@ -127,7 +127,6 @@ autoconf; ./configure --with-igraph; make; sudo make install
 
 
 - Install the **contrib** extensions
-- 
 ```Shell
 cd contrib; make; sudo make install
 ```
