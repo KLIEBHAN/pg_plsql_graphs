@@ -10,10 +10,7 @@ Its main purpuse is to:
 - Make it possible to export these graphs to **dot** files that can be converted e.g. to **png** or **pdf** files
 
 
-##Examples
-
-###Example 1
-
+##Example
 The following shows a snippet of a simple **plpgsql function**
 
 ```Sql
