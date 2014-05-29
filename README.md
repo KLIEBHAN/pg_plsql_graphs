@@ -115,10 +115,10 @@ SUBDIRS = \
 
 - (Re)configure _PostgreSQL_ with **--with-igraph**, (re)make and (re)install it
 
-- E.g. by by typing the following in the root folder of the _PostgreSQL_ source:
+- E.g. by by typing the following in the root folder of the _PostgreSQL_ source (replacing the *<INSTALLDIR>* variable with the directory where you want to install _PostgreSQL_):
 
 ```Shell
-autoconf; ./configure --with-igraph; make; make install
+autoconf; ./configure --with-igraph   --prefix=<INSTALLDIR>; make; make install
 ```
 
 
