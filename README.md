@@ -60,13 +60,13 @@ Installation:
 
 - Clone this git repository to the contrib folder. E.g. using the following command (assuming you are on the root folder of the PostgreSQL source)
 
-```
+```Shell
 cd ./contrib; git clone https://github.com/BA-KLI/pg_plsql_graphs.git
 ```
 
 - Edit the Makefile in the contrib folder and add pg_plsql_graphs	to the SUBDIRS
 
-```C
+```Shell
 ...
 SUBDIRS = \
 		pg_plsql_graphs	\
@@ -79,7 +79,7 @@ SUBDIRS = \
 
 - Go back to the root folder of the PostgreSQL source and type the following:
 
-```
+```Shell
 autoconf; ./configure --with-igraph; make; sudo make install
 ```
 
@@ -90,7 +90,7 @@ autoconf; ./configure --with-igraph; make; sudo make install
 
 - In the postgres.conf ddd pg_plsql_graphs to shared_preload_libraries. It should look like this:
 
-```
+```Shell
 ...
 shared_preload_libraries = 'pg_plsql_graphs'   # (change requires restart)
 ...
@@ -126,7 +126,7 @@ SELECT * FROM pg_plsql_graphs;
 
 - You can now convert these dot files e.g. to the png format using the following graphviz commands
 
-```
+```Shell
 dot -Tpng 'flow.dot' > flow.png
 dot -Tpng 'pdg.dot' > pdg.png
 ```
