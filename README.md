@@ -118,7 +118,7 @@ SUBDIRS = \
 - E.g. by by typing the following in the root folder of the _PostgreSQL_ source:
 
 ```Shell
-autoconf; ./configure --with-igraph; make; sudo make install
+autoconf; ./configure --with-igraph; make; make install
 ```
 
 
@@ -128,7 +128,7 @@ autoconf; ./configure --with-igraph; make; sudo make install
 
 - Install the **contrib** extensions
 ```Shell
-cd contrib; make; sudo make install
+cd contrib; make; make install
 ```
 
 
