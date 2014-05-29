@@ -113,14 +113,25 @@ SUBDIRS = \
 ...
 ```
 
-- Go back to the root folder of the _PostgreSQL_ source and type the following:
+- (Re)configure _PostgreSQL_ with **--with-igraph**, (re)make and (re)install it
+
+- E.g. by by typing the following in the root folder of the _PostgreSQL_ source:
 
 ```Shell
 autoconf; ./configure --with-igraph; make; sudo make install
+```
+
+
+
+- This should install _PostgreSQL_ for you. If you have problems or need more information take a look at http://www.postgresql.org/docs/9.3/static/installation.html
+
+
+- Install the **contrib** extensions
+- 
+```Shell
 cd contrib; make; sudo make install
 ```
 
-- This should install _PostgreSQL_ for you. If you have problems or need more information take a look at http://www.postgresql.org/docs/9.3/static/installation.html
 
 
 - Set up a simple database (http://www.postgresql.org/docs/9.3/interactive/app-initdb.html and http://www.postgresql.org/docs/9.3/interactive/sql-createdatabase.html)
