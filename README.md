@@ -1,7 +1,7 @@
 pg_plsql_graphs
 ===============
 
-_PostgreSQL_ _contrib_ extension for creating flow and deplence graphs for **plpgsql functions** in **dot** format
+_PostgreSQL_ extension for creating flow and deplence graphs for **plpgsql functions** in **dot** format
 
 ##Pre-Installation
 
