@@ -10,6 +10,17 @@ Its main purpuse is to:
 - Make it possible to export these graphs to **dot** files that can be converted e.g. to **png** or **pdf** files
 
 
+##Examples
+
+###Flow Graph example
+
+![alt tag](https://github.com/BA-KLI/pg_plsql_graphs/blob/master/examples/flow.png)
+
+###Dependence Graph example
+
+
+![alt tag](https://github.com/BA-KLI/pg_plsql_graphs/blob/master/examples/dep.png)
+
 ##Pre-Installation
 
 - Download the _igraph_ library and install it to your local system. You can use the following link:
