@@ -14,7 +14,7 @@ EXTENSION = pg_plsql_graphs
 DATA = pg_plsql_graphs--1.0.sql pg_plsql_graphs--unpackaged--1.0.sql
 
 SHLIB_LINK = -ligraph
-PG_CPPFLAGS  += -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include/server 
+PG_CPPFLAGS  += -I$(srcdir) -I$(top_builddir)/src/pl/plpgsql/src/
 
 
 

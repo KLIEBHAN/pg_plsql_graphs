@@ -1,4 +1,4 @@
-#include "server/plpgsql.h"
+#include "plpgsql.h"
 #include "nodes/pg_list.h"
 #include <ctype.h>
 #include <stdio.h>
