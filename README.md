@@ -30,7 +30,7 @@ END;
 ...
 ```
 
-This simple function would generate the following **flow** and **dependence graphs**. Here shown in **png** format that can be generated with the **graphviz dot tool**.
+This simple function would generate the following **flow** and **dependence graphs** (here in **png** format)
 
 #### Flow Graph
 ![Flow Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/flow.png)
