@@ -122,8 +122,7 @@ autoconf; ./configure --with-igraph; make; sudo make install
 - This should install _PostgreSQL_ for you. If you have problems or need more information take a look at http://www.postgresql.org/docs/9.3/static/installation.html
 
 
-- Open your **postgres.conf** configuration file.
-You can find out the path of the file by starting up the **PostgreSQL Server** and then typing the following command in the **psql** client: 
+- Locate your **postgres.conf** configuration file by starting up the **PostgreSQL Server** and then typing the following command in the **psql** client: 
 
 ```Shell
 SHOW config_file;
@@ -139,6 +138,8 @@ shared_preload_libraries = 'pg_plsql_graphs'   # (change requires restart)
 
 - Restart the **PostgreSQL Server**
 
+
+- Set up a simple database (http://www.postgresql.org/docs/9.3/interactive/app-initdb.html and http://www.postgresql.org/docs/9.3/interactive/sql-createdatabase.html)
 
 ##Usage
 
