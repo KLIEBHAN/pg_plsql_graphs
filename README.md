@@ -30,12 +30,13 @@ END;
 ...
 ```
 
-This function generates the following **flow** and **dependence graphs*.
+This simple function would generate the following **flow** and **dependence graphs**.
 
-
+#### Flow Graph
 ![Flow Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/flow.png)
 
 
+#### Dependence Graph
 ![Dep. Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/dep.png)
 
 ##Pre-Installation
