@@ -13,7 +13,7 @@ http://igraph.org/nightly/get/c/igraph-0.7.1.tar.gz
 
 ##Installation
 
-- Add the configurations given by the following path file to **configure.in** of your _PostgresSQL_ sourcecode at the correct places. This will make the _igraph_ library available for _PostgresSQL_
+- Add the configurations given by the following patch file to **configure.in** of your _PostgresSQL_ sourcecode at the correct places. This will make the _igraph_ library available for _PostgresSQL_
 
 ```Diff
 --- configure.in
