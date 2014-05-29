@@ -15,18 +15,48 @@ Installation:
 
 - Add the following configurations to configure.in of your PostgresSQL sourcecode at the correct places. This will make the igraph library available for PostgresSQL
 
+```
+--- configure.in
++++ configure.in
+@@ -727,6 +727,11 @@ fi
+ AC_SUBST(with_uuid)
+ AC_SUBST(UUID_EXTRA_OBJS)
+ 
++#
++# iGraph library
++#
++PGAC_ARG_BOOL(with, igraph, no, [build contrib/pg_plsql_graphs, requires IGraph library])
++AC_SUBST(with_igraph)
+ 
+ #
+ # XML
+@@ -997,6 +1002,10 @@ elif test "$with_uuid" = ossp ; then
+ fi
+ AC_SUBST(UUID_LIBS)
+ 
++#for contrib/pg_plsql_graphs
++if test "$with_igraph" = yes; then
++	AC_CHECK_LIB([igraph], [igraph_adjlist_init], [], [echo "Library Igraph not found!"; exit -1])
++fi
+ 
+ ##
+ ## Header files
+@@ -1142,6 +1151,13 @@ if test "$PORTNAME" = "win32" ; then
+    AC_CHECK_HEADERS(crtdefs.h)
+ fi
+ 
++
++# for contrib/pg_plsql_graphs
++if test "$with_igraph" = yes ; then
++    AC_CHECK_HEADERS(igraph/igraph.h, [],
++      [AC_MSG_ERROR([header file <igraph/igraph.h> is required for iGraph])])
++fi
++
+ ##
+ ## Types, structures, compiler characteristics
+ ##
 
-PGAC_ARG_BOOL(with, igraph, no, [build contrib/pg_plsql_graphs, requires IGraph library])
-AC_SUBST(with_igraph)
-...
-if test "$with_igraph" = yes; then
-	AC_CHECK_LIB([igraph], [igraph_adjlist_init], [], [echo "Library Igraph not found!"; exit -1])
-fi
-...
-if test "$with_igraph" = yes ; then
-    AC_CHECK_HEADERS(igraph/igraph.h, [],
-      [AC_MSG_ERROR([header file <igraph/igraph.h> is required for iGraph])])
-fi
+```
 
 - Clone this git repository to the contrib folder. E.g. using the following command (assuming you are on the root folder of the PostgreSQL source)
 
