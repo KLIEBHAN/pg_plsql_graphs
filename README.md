@@ -3,7 +3,7 @@ pg_plsql_graphs
 
 _pg_plsql_graphs_ is an extension for _PostgreSQL_.
 
-It can be used to generate flow and dependence graphs for **plpgsql functions**.
+It can be used to generate **flow** and **dependence graphs** for **plpgsql functions**.
 
 The generated graphs are stored in the **dot** format.
 
@@ -118,7 +118,7 @@ shared_preload_libraries = 'pg_plsql_graphs'   # (change requires restart)
 CREATE EXTENSION pg_plsql_graphs;
 ```
 
-- Now for every **plpgsql function** you call, a corresponding entry with the flow and depencence graphs in **dot** format is created in the **pg_plsql_graphs** view.
+- Now for every **plpgsql function** you call, a corresponding entry with the **flow** and **depencence graphs** in **dot** format is created in the **pg_plsql_graphs** view.
 
 - You can query this view e.g. by typing: 
 
@@ -128,7 +128,7 @@ SELECT * FROM pg_plsql_graphs;
 
 - This will show you an indented version of the dot graphs of the previously called **plpgsql functions**. There is also a not indented version that is optimized for exports to external files called **pg_plsql_graphs_trimmed**.
 
-- In order to export a graph to a external file (e.g. to convert it to png) you can use the COPY function. The following commands will copy the flow graph and the depence graph of the last called **plpgsql function** to external **dot** files. To do that the views **pg_plsql_last_flowgraph_dot** and **pg_plsql_last_pdgs_dot** are used.
+- In order to export a graph to a external file (e.g. to convert it to png) you can use the COPY function. The following commands will copy the **flow** and **depence graph** of the last called **plpgsql function** to external **dot** files. To do that the views **pg_plsql_last_flowgraph_dot** and **pg_plsql_last_pdgs_dot** are used.
 
 ```Sql
 \COPY (select * from pg_plsql_last_flowgraph_dot)  TO 'flow.dot';
