@@ -95,7 +95,7 @@ http://igraph.org/nightly/get/c/igraph-0.7.1.tar.gz
 cd ./contrib; git clone https://github.com/BA-KLI/pg_plsql_graphs.git
 ```
 
-- Edit the Makefile in the contrib folder and add **pg_plsql_graphs** to **SUBDIRS**
+- Edit the Makefile in the **contrib** folder and add **pg_plsql_graphs** to **SUBDIRS**
 
 ```Shell
 ...
