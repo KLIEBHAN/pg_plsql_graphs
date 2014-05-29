@@ -39,15 +39,13 @@ This simple function would generate the following **flow** and **dependence grap
 #### Dependence Graph
 ![Dep. Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/dep.png)
 
-##Pre-Installation
+##Configuration and Installation
 
 - Download the _igraph_ library and install it to your local system. You can use the following link:
 http://igraph.org/nightly/get/c/igraph-0.7.1.tar.gz
 
 - Download the _PostgresSQL_ sources e.g. via **git** from [git://git.postgresql.org/git/postgresql.git](git://git.postgresql.org/git/postgresql.git) (More details are given here: https://wiki.postgresql.org/wiki/Working_with_Git)
 
-
-##Installation
 
 - Add the configurations given by the following **diff** to **configure.in** of your _PostgresSQL_ sourcecode at the correct places. This will make the _igraph_ library available for _PostgresSQL_
 
