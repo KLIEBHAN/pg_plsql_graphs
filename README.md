@@ -117,6 +117,7 @@ SUBDIRS = \
 
 ```Shell
 autoconf; ./configure --with-igraph; make; sudo make install
+cd contrib; make; sudo make install
 ```
 
 - This should install _PostgreSQL_ for you. If you have problems or need more information take a look at http://www.postgresql.org/docs/9.3/static/installation.html
