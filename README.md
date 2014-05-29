@@ -3,7 +3,7 @@ pg_plsql_graphs
 
 _PostgreSQL_ _contrib_ extension for creating flow and deplence graphs for _plpgsql functions_ in _dot_ format
 
-=Pre-Installation:=
+##Pre-Installation
 
 - Download the _igraph_ library and install it to your local system. You can use the following link:
 http://igraph.org/nightly/get/c/igraph-0.7.1.tar.gz
@@ -11,7 +11,7 @@ http://igraph.org/nightly/get/c/igraph-0.7.1.tar.gz
 - Download the _PostgresSQL_ sources via git from git://git.postgresql.org/git/postgresql.git (More details are given here: https://wiki.postgresql.org/wiki/Working_with_Git)
 
 
-Installation:
+##Installation
 
 - Add the configurations given by the following path file to _configure.in_ of your _PostgresSQL_ sourcecode at the correct places. This will make the _igraph_ library available for _PostgresSQL_
 
@@ -104,7 +104,7 @@ shared_preload_libraries = 'pg_plsql_graphs'   # (change requires restart)
 - Restart the _PostgreSQL_ server
 
 
-=Usage:=
+##Usage
 
 - Start up _psql_ and type 
 
