@@ -15,18 +15,14 @@ Installation:
 
 - Add the following configurations to configure.in of your PostgresSQL sourcecode at the correct places. This will make the igraph library available for PostgresSQL
 
-#
-# iGraph library
-#
+
 PGAC_ARG_BOOL(with, igraph, no, [build contrib/pg_plsql_graphs, requires IGraph library])
 AC_SUBST(with_igraph)
 ...
-#for contrib/pg_plsql_graphs
 if test "$with_igraph" = yes; then
 	AC_CHECK_LIB([igraph], [igraph_adjlist_init], [], [echo "Library Igraph not found!"; exit -1])
 fi
 ...
-# for contrib/pg_plsql_graphs
 if test "$with_igraph" = yes ; then
     AC_CHECK_HEADERS(igraph/igraph.h, [],
       [AC_MSG_ERROR([header file <igraph/igraph.h> is required for iGraph])])
