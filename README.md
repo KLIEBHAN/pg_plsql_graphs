@@ -14,12 +14,11 @@ Its main purpuse is to:
 
 ###Flow Graph example
 
-![alt tag](https://github.com/BA-KLI/pg_plsql_graphs/blob/master/examples/flow.png)
-
+![Flow Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/flow.png)
 ###Dependence Graph example
 
 
-![alt tag](https://github.com/BA-KLI/pg_plsql_graphs/blob/master/examples/dep.png)
+![Dep. Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/dep.png)
 
 ##Pre-Installation
 
