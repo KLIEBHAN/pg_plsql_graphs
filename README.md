@@ -15,7 +15,7 @@ Installation:
 
 - Add the configurations given by the following path file to configure.in of your PostgresSQL sourcecode at the correct places. This will make the igraph library available for PostgresSQL
 
-```
+```Diff
 --- configure.in
 +++ configure.in
 @@ -727,6 +727,11 @@ fi
