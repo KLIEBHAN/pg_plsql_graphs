@@ -1,7 +1,10 @@
 pg_plsql_graphs
 ===============
 
-_PostgreSQL_ extension for creating flow and deplence graphs for **plpgsql functions** in **dot** format
+_pg_plsql_graphs_ is an extension for _PostgreSQL_.
+It can be used to generate _graphviz_ flow and dependence graphs for **plpgsql functions**.
+
+
 
 ##Pre-Installation
 
