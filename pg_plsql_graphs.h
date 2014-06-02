@@ -85,7 +85,7 @@ igraph_t* buildIGraph(List* nodes,PLpgSQL_function* function,PLpgSQL_execstate *
  * Functions in pg_plsql_igraph_export.c
  * ----------
  */
-void printReadsAndWrites(igraph_t* graph);
+void printReadsAndWrites(igraph_t* graph, long nodeid, Datum* arguments, Datum* result);
 char* convertProgramDependecGraphToDotFormat(    igraph_t*     graph,
                                                 int         sameLevel,
                                                 int         maxDotFileSize);
@@ -106,6 +106,13 @@ void retrieveNodeNumber(igraph_t* igraph, long nodeId, Datum* argument, Datum* r
 long getNodeNumberToStmt(PLpgSQL_stmt* stmt1, igraph_t* graph);
 int dependenceConflict(int node1, int node2, igraph_t* igraph);
 int conflict(PLpgSQL_stmt* stmt1, PLpgSQL_stmt* stmt2, igraph_t* igraph);
+
+
+void* getIGraphGlobalAttrP(igraph_t* igraph, const char* name);
+long getIGraphGlobalAttrL(igraph_t* igraph, const char* name);
+void* getIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid);
+long getIGraphNodeAttrL(igraph_t* igraph, const char* name, long nodeid);
+
 /* ----------
  * Functions in pg_plsql_list_ops.c
  * ----------

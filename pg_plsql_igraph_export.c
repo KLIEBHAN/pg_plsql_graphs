@@ -11,71 +11,38 @@
 /**
  * Prints out the variables that staments read and write to
  */
-void printReadsAndWrites(igraph_t* graph){
-
-    /* init and create a node iterator over all nodes */
-    igraph_vit_t nodeit;
-    igraph_vs_t allNodes;
-    igraph_vs_all(&allNodes);
-    igraph_vit_create(graph,allNodes, &nodeit);
-
-    union dblPointer func;
-    func.doublevalue = GAN(graph,"function");
-    PLpgSQL_function* function = func.pointer;
+void printReadsAndWrites(igraph_t* graph, long nodeid, Datum* arguments, Datum* result){
 
 
-    /* iterate over the nodes */
-    while (!IGRAPH_VIT_END(nodeit)) {
-        /* current node id */
-        long int nodeid = (long int) IGRAPH_VIT_GET(nodeit);
+    PLpgSQL_function* function = getIGraphGlobalAttrP(graph,"function");
 
-        printf("\n\nOn: %s\n",VAS(graph,"label",nodeid));
+    printf("\n\nOn: %s\n",VAS(graph,"label",nodeid));
 
-        union dblPointer data;
-        data.doublevalue = VAN(graph,"read",nodeid);
-        /* filter for NaN */
-        if(data.doublevalue == data.doublevalue){
-            Bitmapset* bms = data.pointer;
-            int dno;
-            while (!bms_is_empty(bms) && (dno = bms_first_member(bms)) >= 0){
-                PLpgSQL_datum *datum = function->datums[dno];
+    Bitmapset* bms = bms_copy(getIGraphNodeAttrP(graph,"read",nodeid));
+    int dno;
+    while (bms != NULL && !bms_is_empty(bms) && (dno = bms_first_member(bms)) >= 0){
+        PLpgSQL_datum *datum = function->datums[dno];
 
-                if (datum->dtype == PLPGSQL_DTYPE_VAR)
-                {
-                    PLpgSQL_var *var = (PLpgSQL_var *) datum;
-                    printf("Reading: %s\n",var->refname);
-                }
-            }
-
+        if (datum->dtype == PLPGSQL_DTYPE_VAR)
+        {
+            PLpgSQL_var *var = (PLpgSQL_var *) datum;
+            printf("Reading: %s\n",var->refname);
         }
-        data.doublevalue = VAN(graph,"write",nodeid);
-
-
-        /* filter for NaN */
-        if(data.doublevalue == data.doublevalue){
-
-            int* writeDnos = data.pointer;
-
-            data.doublevalue  = VAN(graph,"nwrite",nodeid);
-
-            for(int i = 0; i < data.longvalue; i++)
-            {
-
-                PLpgSQL_datum *datum = function->datums[writeDnos[i]];
-                if (datum->dtype == PLPGSQL_DTYPE_VAR)
-                {
-                    PLpgSQL_var *var = (PLpgSQL_var *) datum;
-                    printf("Writing: %s\n",var->refname);
-                }
-            }
-
-        }
-        /* next iteration over graph nodes */
-        IGRAPH_VIT_NEXT(nodeit);
     }
-    /* destroy the graph iterator */
-    igraph_vit_destroy(&nodeit);
-    igraph_vs_destroy(&allNodes);
+
+    int* writeDnos = getIGraphNodeAttrP(graph,"write",nodeid);
+    long nwrite  = getIGraphNodeAttrL(graph,"nwrite",nodeid);
+
+    for(int i = 0; i < nwrite; i++)
+    {
+
+        PLpgSQL_datum *datum = function->datums[writeDnos[i]];
+        if (datum->dtype == PLPGSQL_DTYPE_VAR)
+        {
+            PLpgSQL_var *var = (PLpgSQL_var *) datum;
+            printf("Writing: %s\n",var->refname);
+        }
+    }
 }
 
 

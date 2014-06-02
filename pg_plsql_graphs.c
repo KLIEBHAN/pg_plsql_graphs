@@ -295,6 +295,7 @@ void createGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
 
 
 
+
     /* destroy the igraph */
     igraph_destroy(igraph);
     pfree(igraph);

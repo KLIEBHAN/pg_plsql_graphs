@@ -322,16 +322,20 @@ void* getIGraphGlobalAttrP(igraph_t* igraph, const char* name){
     union dblPointer data;
     data.doublevalue = GAN(igraph,name);
 
-    if(data.doublevalue != data.doublevalue)
+    if(data.doublevalue == data.doublevalue)
+        return data.pointer;
+    else
         return NULL;
-
-    return data.pointer;
 }
 
 long getIGraphGlobalAttrL(igraph_t* igraph, const char* name){
     union dblPointer data;
     data.doublevalue = GAN(igraph,name);
-    return data.longvalue;
+
+    if(data.doublevalue == data.doublevalue)
+        return data.longvalue;
+    else
+        return 0;
 }
 
 
@@ -341,10 +345,10 @@ void* getIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid){
     data.doublevalue = VAN(igraph,name,nodeid);
 
 
-    if(data.doublevalue != data.doublevalue)
+    if(data.doublevalue == data.doublevalue)
+        return data.pointer;
+    else
         return NULL;
-
-    return data.pointer;
 }
 
 
@@ -353,7 +357,11 @@ void* getIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid){
 long getIGraphNodeAttrL(igraph_t* igraph, const char* name, long nodeid){
     union dblPointer data;
     data.doublevalue = VAN(igraph,name,nodeid);
-    return data.longvalue;
+
+    if(data.doublevalue == data.doublevalue)
+        return data.longvalue;
+    else
+        return 0;
 }
 
 
