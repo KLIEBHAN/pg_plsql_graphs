@@ -121,14 +121,16 @@ char* convertGraphToDotFormat(  igraph_t* graph,
                                 char* additionalNodeConfiguration,
                                 int maxDotFileSize){
 
+    /* allocate space for the dot string */
     char* buf = palloc(maxDotFileSize);
+    /* datum for dot string */
     Datum bufDatum = PointerGetDatum(buf);
 
 
     strcpy(buf, "");
 
-    /* start of digraph */
-    sprintf(buf,"digraph g {\n");/*splines=ortho; */
+    /* start of digraph with a little configuration */
+    sprintf(buf,"digraph g {\n");
     sprintf(eos(buf),"nodesep=0.3;\n");
     sprintf(eos(buf),"graph[pad=\"0.20,0.20\"];\n");
     sprintf(eos(buf),"edge[arrowsize=0.6,penwidth=0.6];\n");
@@ -136,18 +138,23 @@ char* convertGraphToDotFormat(  igraph_t* graph,
     if(additionalGeneralConfiguration != NULL)
         sprintf(eos(buf),additionalGeneralConfiguration);
 
+    /* arguments for nodes */
     Datum datumsNodes[2];
     datumsNodes[0] = bufDatum;                                      /* string buffer */
     datumsNodes[1] = CStringGetDatum(additionalNodeConfiguration);  /* Additional node conf */
 
+
+    /* iterate over igraph nodes and execute covertNodeLabelToDot to create labels for nodes */
     iterateIGraphNodes(graph,&covertNodeLabelToDot,datumsNodes,NULL,0);
 
 
+    /* Arguments for edges */
     Datum datumsEdges[3];
     datumsEdges[0] = bufDatum;                      /* string buffer */
     datumsEdges[1] = BoolGetDatum(edgeLabels);      /* edge labels */
     datumsEdges[2]  = PointerGetDatum(edgeTypes);   /* visible edge types */
 
+    /* iterate over edges and execute convertEdgeLabelToDot to create edges */
     iterateReachableEdges(graph,&convertEdgeLabelToDot,datumsEdges,NULL,0);
 
     /* put nodes on the same level */
