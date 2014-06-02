@@ -93,6 +93,8 @@ char* convertGraphToDotFormat(  igraph_t* graph,
                                 char* additionalGeneralConfiguration,
                                 char* additionalNodeConfiguration,
                                 int maxDotFileSize);
+void appendNodeToDot(igraph_t* graph, long nodeid, Datum* arguments, Datum* result);
+void appendEdgeToDot(igraph_t* graph, long eid, long from, long to, Datum* arguments, Datum* result);
 /* ----------
  * Functions in pg_plsql_igraphanalysis.c
  * ----------

@@ -46,8 +46,10 @@ void printReadsAndWrites(igraph_t* graph, long nodeid, Datum* arguments, Datum* 
 }
 
 
-
-void covertNodeLabelToDot(igraph_t* graph, long nodeid, Datum* arguments, Datum* result){
+/**
+ * Append Node data to the dot string buffer
+ */
+void appendNodeToDot(igraph_t* graph, long nodeid, Datum* arguments, Datum* result){
     char* buf = DatumGetPointer(arguments[0]);
     char* additionalAttributes = DatumGetCString(arguments[1]);
 
@@ -59,7 +61,10 @@ void covertNodeLabelToDot(igraph_t* graph, long nodeid, Datum* arguments, Datum*
 }
 
 
-void convertEdgeLabelToDot(igraph_t* graph, long eid, long from, long to, Datum* arguments, Datum* result){
+/**
+ * Append Edge to the dot string buffer
+ */
+void appendEdgeToDot(igraph_t* graph, long eid, long from, long to, Datum* arguments, Datum* result){
     char* buf = DatumGetPointer(arguments[0]);
     bool showLabels = DatumGetBool(arguments[1]);
 
@@ -145,7 +150,7 @@ char* convertGraphToDotFormat(  igraph_t* graph,
 
 
     /* iterate over igraph nodes and execute covertNodeLabelToDot to create labels for nodes */
-    iterateIGraphNodes(graph,&covertNodeLabelToDot,datumsNodes,NULL,0);
+    iterateIGraphNodes(graph,&appendNodeToDot,datumsNodes,NULL,0);
 
 
     /* Arguments for edges */
@@ -155,7 +160,7 @@ char* convertGraphToDotFormat(  igraph_t* graph,
     datumsEdges[2]  = PointerGetDatum(edgeTypes);   /* visible edge types */
 
     /* iterate over edges and execute convertEdgeLabelToDot to create edges */
-    iterateReachableEdges(graph,&convertEdgeLabelToDot,datumsEdges,NULL,0);
+    iterateReachableEdges(graph,&appendEdgeToDot,datumsEdges,NULL,0);
 
     /* put nodes on the same level */
     if(sameLevel){

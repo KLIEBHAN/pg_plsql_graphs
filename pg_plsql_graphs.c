@@ -285,10 +285,6 @@ void createGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
 
     /* perform operations depenence analysis on igraph */
     iterateIGraphNodes(igraph,&createProgramDependenceGraph,NULL,NULL,0);
-    /* convert the igraph to a dot format */
-    createDotGraphs();
-
-
 
     /* Create the flow graph */
     char* flowGraphDot = convertGraphToDotFormat(
