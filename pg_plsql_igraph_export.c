@@ -188,6 +188,10 @@ char* convertFlowGraphToDotFormat(igraph_t* graph, int maxDotFileSize){
 
     /* start of digraph */
     sprintf(buf,"digraph g {\n");/*splines=ortho; */
+    sprintf(eos(buf),"nodesep=0.3;\n");
+    sprintf(eos(buf),"graph[pad=\"0.20,0.20\"];\n");
+    sprintf(eos(buf),"edge[arrowsize=0.6,penwidth=0.6];\n");
+    sprintf(eos(buf),"node[fontsize=10];\n");
 
     Datum datumsNodes[2];
     datumsNodes[0] = bufDatum;
