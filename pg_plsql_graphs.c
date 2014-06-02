@@ -287,7 +287,6 @@ void createGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
 
 	/* perform operations depenence analysis on igraph */
 	createProgramDependenceGraph(igraph);
-	printReadsAndWrites(igraph);
 
 	/* convert the igraph to a dot format */
 	char* programDepenceGraphDot = convertProgramDependecGraphToDotFormat(	igraph,
