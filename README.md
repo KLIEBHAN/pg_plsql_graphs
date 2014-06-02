@@ -10,10 +10,7 @@ Its main purpuse is to:
 - Make it possible to export these graphs to **dot** files that can be converted e.g. to **png** or **pdf** files
 
 
-##Examples
-
-###Example 1
-
+##Example
 The following shows a snippet of a simple **plpgsql function**
 
 ```Sql
@@ -39,15 +36,13 @@ This simple function would generate the following **flow** and **dependence grap
 #### Dependence Graph
 ![Dep. Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/dep.png)
 
-##Pre-Installation
+##Configuration and Installation
 
 - Download the _igraph_ library and install it to your local system. You can use the following link:
 http://igraph.org/nightly/get/c/igraph-0.7.1.tar.gz
 
 - Download the _PostgresSQL_ sources e.g. via **git** from [git://git.postgresql.org/git/postgresql.git](git://git.postgresql.org/git/postgresql.git) (More details are given here: https://wiki.postgresql.org/wiki/Working_with_Git)
 
-
-##Installation
 
 - Add the configurations given by the following **diff** to **configure.in** of your _PostgresSQL_ sourcecode at the correct places. This will make the _igraph_ library available for _PostgresSQL_
 
@@ -100,7 +95,7 @@ http://igraph.org/nightly/get/c/igraph-0.7.1.tar.gz
 cd ./contrib; git clone https://github.com/BA-KLI/pg_plsql_graphs.git
 ```
 
-- Edit the Makefile in the contrib folder and add **pg_plsql_graphs** to **SUBDIRS**
+- Edit the Makefile in the **contrib** folder and add **pg_plsql_graphs** to **SUBDIRS**
 
 ```Shell
 ...
@@ -113,14 +108,25 @@ SUBDIRS = \
 ...
 ```
 
-- Go back to the root folder of the _PostgreSQL_ source and type the following:
+- (Re)configure _PostgreSQL_ with **--with-igraph**, (re)make and (re)install it
+
+- E.g. by by typing the following in the root folder of the _PostgreSQL_ source (replacing the *<INSTALLDIR>* variable with the directory where you want to install _PostgreSQL_):
 
 ```Shell
-autoconf; ./configure --with-igraph; make; sudo make install
+autoconf; ./configure --with-igraph   --prefix=<INSTALLDIR>; make; make install
 ```
+
+
 
 - This should install _PostgreSQL_ for you. If you have problems or need more information take a look at http://www.postgresql.org/docs/9.3/static/installation.html
 
+
+- Install the **contrib** extensions
+```Shell
+cd contrib; make; make install
+```
+
+- If you didn't already set up a the databasecluster and a database, do it using **initdb** and connect to it with  **psql** (http://www.postgresql.org/docs/9.3/interactive/app-initdb.html and http://www.postgresql.org/docs/9.3/interactive/sql-createdatabase.html)
 
 - Locate your **postgres.conf** configuration file by starting up the **PostgreSQL Server** and then typing the following command in the **psql** client: 
 
@@ -139,7 +145,6 @@ shared_preload_libraries = 'pg_plsql_graphs'   # (change requires restart)
 - Restart the **PostgreSQL Server**
 
 
-- Set up a simple database (http://www.postgresql.org/docs/9.3/interactive/app-initdb.html and http://www.postgresql.org/docs/9.3/interactive/sql-createdatabase.html)
 
 ##Usage
 
@@ -149,7 +154,7 @@ shared_preload_libraries = 'pg_plsql_graphs'   # (change requires restart)
 CREATE EXTENSION pg_plsql_graphs;
 ```
 
-- Now for every **plpgsql function** you call, a corresponding entry with the **flow** and **depencence graphs** in **dot** format is created in the **pg_plsql_graphs** view.
+- Now for every **plpgsql function** you call, a corresponding entry with the **flow** and **depencence graphs** in **dot** format is created a HashTable that is accessable by the **pg_plsql_graphs** view.
 
 - After calling a **plpgsql function** you can now query this view e.g. by typing: 
 
