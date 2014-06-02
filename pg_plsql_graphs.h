@@ -86,10 +86,13 @@ igraph_t* buildIGraph(List* nodes,PLpgSQL_function* function,PLpgSQL_execstate *
  * ----------
  */
 void printReadsAndWrites(igraph_t* graph, long nodeid, Datum* arguments, Datum* result);
-char* convertProgramDependecGraphToDotFormat(    igraph_t*     graph,
-                                                int         sameLevel,
-                                                int         maxDotFileSize);
-char* convertFlowGraphToDotFormat(igraph_t* graph, int maxDotFileSize);
+char* convertGraphToDotFormat(  igraph_t* graph,
+                                List* edgeTypes,
+                                bool edgeLabels,
+                                bool sameLevel,
+                                char* additionalGeneralConfiguration,
+                                char* additionalNodeConfiguration,
+                                int maxDotFileSize);
 /* ----------
  * Functions in pg_plsql_igraphanalysis.c
  * ----------

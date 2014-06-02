@@ -111,74 +111,15 @@ void buildRank(igraph_t* graph, long nodeid, Datum* arguments, Datum* result, bo
 
 
 /**
- * Converts the given igraph program dependence graph to dot format
+ * Converts the given igraph to dot format
  */
-char* convertProgramDependecGraphToDotFormat(    igraph_t* graph,
-                                                int sameLevel,
-                                                int maxDotFileSize){
-
-    char* buf = palloc(maxDotFileSize);
-    Datum bufDatum = PointerGetDatum(buf);
-    strcpy(buf,"");
-
-
-    /* start of digraph */
-    sprintf(eos(buf),"digraph g {\n");/* splines=ortho; */
-    sprintf(eos(buf),"splines=ortho;\n");
-    sprintf(eos(buf),"nodesep=0.3;\n");
-    sprintf(eos(buf),"graph[pad=\"0.20,0.20\"];\n");
-    sprintf(eos(buf),"edge[arrowsize=0.6,penwidth=0.6];\n");
-    sprintf(eos(buf),"node[fontsize=10];\n");
-
-
-
-
-    Datum datumsNodes[2];
-    datumsNodes[0] = bufDatum;
-    datumsNodes[1] = CStringGetDatum(NULL);
-
-    iterateIGraphNodes(graph,&covertNodeLabelToDot,datumsNodes,NULL,0);
-
-    Datum datums[7];
-    datums[0] = bufDatum;
-    datums[1] = BoolGetDatum(0);
-
-
-    List* types = list_make4(
-                                list_make3("FLOW",         "black", "[style=dashed]"),
-                                list_make2("RW-DEPENDENCE","blue"),
-                                list_make2("WR-DEPENDENCE","green"),
-                                list_make2("WW-DEPENDENCE","red"));
-
-    datums[2]  = PointerGetDatum(types);
-
-    iterateReachableEdges(graph,&convertEdgeLabelToDot,datums,NULL,0);
-
-
-
-
-
-    if(sameLevel){
-        sprintf(eos(buf),"\n{rank=same; ");
-
-        iterateIGraphNodes(graph,&buildRank,&bufDatum,NULL,0);
-
-
-        sprintf(eos(buf),"}\n");
-    }
-
-
-    /* finish the graph */
-    sprintf(eos(buf),"}");
-
-    return buf;
-
-}
-
-/**
- * Converts the given igraph flow graph to dot format
- */
-char* convertFlowGraphToDotFormat(igraph_t* graph, int maxDotFileSize){
+char* convertGraphToDotFormat(  igraph_t* graph,
+                                List* edgeTypes,
+                                bool edgeLabels,
+                                bool sameLevel,
+                                char* additionalGeneralConfiguration,
+                                char* additionalNodeConfiguration,
+                                int maxDotFileSize){
 
     char* buf = palloc(maxDotFileSize);
     Datum bufDatum = PointerGetDatum(buf);
@@ -192,22 +133,29 @@ char* convertFlowGraphToDotFormat(igraph_t* graph, int maxDotFileSize){
     sprintf(eos(buf),"graph[pad=\"0.20,0.20\"];\n");
     sprintf(eos(buf),"edge[arrowsize=0.6,penwidth=0.6];\n");
     sprintf(eos(buf),"node[fontsize=10];\n");
+    if(additionalGeneralConfiguration != NULL)
+        sprintf(eos(buf),additionalGeneralConfiguration);
 
     Datum datumsNodes[2];
-    datumsNodes[0] = bufDatum;
-    datumsNodes[1] = CStringGetDatum("[shape=box]");
+    datumsNodes[0] = bufDatum;                                      /* string buffer */
+    datumsNodes[1] = CStringGetDatum(additionalNodeConfiguration);  /* Additional node conf */
 
     iterateIGraphNodes(graph,&covertNodeLabelToDot,datumsNodes,NULL,0);
 
 
     Datum datumsEdges[3];
-    datumsEdges[0] = bufDatum;
-    datumsEdges[1] = BoolGetDatum(1);
-    List* types = list_make1(
-                                list_make2("FLOW",         "black"));
+    datumsEdges[0] = bufDatum;                      /* string buffer */
+    datumsEdges[1] = BoolGetDatum(edgeLabels);      /* edge labels */
+    datumsEdges[2]  = PointerGetDatum(edgeTypes);   /* visible edge types */
 
-    datumsEdges[2]  = PointerGetDatum(types);
     iterateReachableEdges(graph,&convertEdgeLabelToDot,datumsEdges,NULL,0);
+
+    /* put nodes on the same level */
+    if(sameLevel){
+        sprintf(eos(buf),"\n{rank=same; ");
+        iterateIGraphNodes(graph,&buildRank,&bufDatum,NULL,0);
+        sprintf(eos(buf),"}\n");
+    }
 
 
     /* finish the graph */

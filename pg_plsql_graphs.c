@@ -270,7 +270,6 @@ static void pgpg_func_end(PLpgSQL_execstate *estate, PLpgSQL_function *func){
 }
 
 
-
 /**
  * Creates the graph and stores it in the HashTable
  */
@@ -288,10 +287,36 @@ void createGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
     /* perform operations depenence analysis on igraph */
     iterateIGraphNodes(igraph,&createProgramDependenceGraph,NULL,NULL,0);
     /* convert the igraph to a dot format */
-    char* programDepenceGraphDot = convertProgramDependecGraphToDotFormat(igraph,
-                                                                          1,
-                                                                          MAXDOTFILESIZE);
-    char* flowGraphDot = convertFlowGraphToDotFormat(igraph,MAXDOTFILESIZE);
+    createDotGraphs();
+
+
+
+    /* Create the flow graph */
+    char* flowGraphDot = convertGraphToDotFormat(
+                                igraph,
+                                /* Flow graph has only the FLOW edges with the color black */
+                                list_make1(
+                                list_make2("FLOW", "black")),
+                                1,/* edge labels */
+                                0,/* not on same level */
+                                NULL,/* no additional general atrribs */
+                                "[shape=box]",/* box shape */
+                                MAXDOTFILESIZE);
+
+
+    char* programDepenceGraphDot = convertGraphToDotFormat(
+                                igraph,
+                                /* Dependence Graph edges with colors, Flow edges are dashed */
+                                list_make4(
+                                        list_make3("FLOW",         "black", "[style=dashed]"),
+                                        list_make2("RW-DEPENDENCE","blue"),
+                                        list_make2("WR-DEPENDENCE","green"),
+                                        list_make2("WW-DEPENDENCE","red")),
+                                0,/* no edge labels */
+                                1,/* on same level */
+                                "splines=ortho;\n",/* ortho */
+                                NULL,/* no additional node attribs */
+                                MAXDOTFILESIZE);
 
 
 
