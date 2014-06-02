@@ -65,42 +65,47 @@ void appendNodeToDot(igraph_t* graph, long nodeid, Datum* arguments, Datum* resu
  * Append Edge to the dot string buffer
  */
 void appendEdgeToDot(igraph_t* graph, long eid, long from, long to, Datum* arguments, Datum* result){
+    /* The buffer to append the dot data to */
     char* buf = DatumGetPointer(arguments[0]);
+    /* show labels attribute */
     bool showLabels = DatumGetBool(arguments[1]);
-
-    List* list = DatumGetPointer(arguments[2]);
+    /* edge types */
+    List* edgeTypes = DatumGetPointer(arguments[2]);
 
 
     ListCell* cell;
-    foreach(cell, list){
-        List* l = lfirst(cell);
+    /* iterate given edge types that need to be added to the dot */
+    foreach(cell, edgeTypes){
+        List* edgeData = lfirst(cell);
 
-
-        if(strcmp(EAS(graph,"type",eid),linitial(l)) == 0){
+        /* of the edge has the current edge type type append the dot data */
+        if(strcmp(EAS(graph,"type",eid),linitial(edgeData)) == 0){
+            /* add edge */
             sprintf(eos(buf),"%li -> %li",from,to);
+            /* penwidth */
             sprintf(eos(buf),"[penwidth=0.4]");
+            /* if show labes attribute is set -> add them */
             if(showLabels){
                 sprintf(eos(buf),"[label=\"\%s\"]",EAS(graph,"label",eid));
             }
-            sprintf(eos(buf),"[color=%s]",lsecond(l));
+            /* add the color */
+            sprintf(eos(buf),"[color=%s]",lsecond(edgeData));
 
-
-            if(l->length > 2){
-                sprintf(eos(buf),"%s",lthird(l));
+            /* additional properties */
+            if(edgeData->length > 2){
+                sprintf(eos(buf),"%s",lthird(edgeData));
             }
 
         }
 
     }
-
-
-
-
 }
 
 
 
-
+/**
+ *  create Rank
+ */
 void buildRank(igraph_t* graph, long nodeid, Datum* arguments, Datum* result, bool lastElement){
     char* buf = DatumGetPointer(*arguments);
 
