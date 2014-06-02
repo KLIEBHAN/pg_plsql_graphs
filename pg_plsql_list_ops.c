@@ -10,9 +10,9 @@
  * Copys a list
  */
 List* copy_list(List* parents){
-	List* newList = NIL;
-	if(parents != NIL){
-		newList = list_copy(parents);
-	}
-	return newList;
+    List* newList = NIL;
+    if(parents != NIL){
+        newList = list_copy(parents);
+    }
+    return newList;
 }

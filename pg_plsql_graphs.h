@@ -11,28 +11,28 @@
  * Custom Graph data types
  */
 struct edge{
-	long int sourceid;
-	long int targetid;
-	char* label;
+    long int sourceid;
+    long int targetid;
+    char* label;
 };
 
 
 struct node{
-	long int key;
-	List* edges;
-	char* label;
-	PLpgSQL_stmt* stmt;
+    long int key;
+    List* edges;
+    char* label;
+    PLpgSQL_stmt* stmt;
 };
 
 struct graph_status{
-	List* parents;
-	List* nodes;
+    List* parents;
+    List* nodes;
 };
 
 union dblPointer{
-	double doublevalue;
-	long int longvalue;
-	void* pointer;
+    double doublevalue;
+    long int longvalue;
+    void* pointer;
 };
 
 /**********************************************************************
@@ -61,12 +61,12 @@ struct edge* getNthEdgeFromNode(List* nodes, long int nodeid, int n);
 char* varnumberToVarname(int varno,PLpgSQL_datum** datums, int ndatums);
 struct graph_status* initStatus(int initnodeid);
 void appendNewNodeAndConnectParents(int* newnodeid,
-									struct graph_status* status,
-									PLpgSQL_stmt* stmt);
+                                    struct graph_status* status,
+                                    PLpgSQL_stmt* stmt);
 void createProgramGraph(int* newnodeid,
-					struct graph_status* status,
-					List* statements,
-					PLpgSQL_function* function);
+                    struct graph_status* status,
+                    List* statements,
+                    PLpgSQL_function* function);
 
 /* ----------
  * Functions in pg_plsql_graph2igraph.c
@@ -79,18 +79,18 @@ igraph_t* buildIGraph(List* nodes,PLpgSQL_function* function,PLpgSQL_execstate *
  * ----------
  */
 void printReadsAndWrites(igraph_t* graph);
-char* convertProgramDependecGraphToDotFormat(	igraph_t* 	graph,
-												int 		sameLevel,
-												int 		maxDotFileSize);
+char* convertProgramDependecGraphToDotFormat(    igraph_t*     graph,
+                                                int         sameLevel,
+                                                int         maxDotFileSize);
 char* convertFlowGraphToDotFormat(igraph_t* graph, int maxDotFileSize);
 /* ----------
  * Functions in pg_plsql_igraphanalysis.c
  * ----------
  */
 void addLabels(int nodeid, igraph_t* igraph);
-Bitmapset* getParametersOfQueryExpr(PLpgSQL_expr* 		expr,
-									PLpgSQL_function* 	surroundingFunction,
-									PLpgSQL_execstate* 	estate);
+Bitmapset* getParametersOfQueryExpr(PLpgSQL_expr*         expr,
+                                    PLpgSQL_function*     surroundingFunction,
+                                    PLpgSQL_execstate*     estate);
 void setReadsAndWrites(int nodeid, igraph_t* igraph);
 void createProgramDependenceGraph(igraph_t*  igraph);
 int getNodeNumberToStmt(PLpgSQL_stmt* stmt1, igraph_t* graph);
