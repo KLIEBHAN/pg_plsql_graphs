@@ -8,7 +8,9 @@
 /**
  * Build the igraph
  */
-igraph_t* buildIGraph(List* nodes,PLpgSQL_function* function,PLpgSQL_execstate * estate){
+igraph_t* buildIGraph(List* nodes,
+                      PLpgSQL_function* function,
+                      PLpgSQL_execstate * estate){
 
     /* init a new igraph */
     igraph_t* graph = palloc(sizeof(igraph_t));
@@ -50,10 +52,17 @@ igraph_t* buildIGraph(List* nodes,PLpgSQL_function* function,PLpgSQL_execstate *
             struct edge* edge = lfirst(e);
 
             /* Add edges to the graph */
-            igraph_add_edge(graph,edge->sourceid,edge->targetid);
+            igraph_add_edge(graph,
+                            edge->sourceid,
+                            edge->targetid);
 
             igraph_integer_t eid;
-            igraph_get_eid(graph, &eid,edge->sourceid, edge->targetid,1,0);
+            igraph_get_eid(graph,
+                           &eid,
+                           edge->sourceid,
+                           edge->targetid,
+                           1,
+                           0);
 
             SETEAS(graph,"type",eid,"FLOW");
 

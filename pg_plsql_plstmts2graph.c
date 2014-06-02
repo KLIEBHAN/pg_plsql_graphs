@@ -23,7 +23,6 @@ char* varnumberToVarname(int varno,PLpgSQL_datum** datums, int ndatums){
                 return myvar->refname;
             }
         }
-
     }
     return (char*)NULL;
 }

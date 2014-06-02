@@ -34,7 +34,7 @@ char* concatStrings2(char* str1, char* str2){
  */
 char* concatStrings3(char* str1, char* str2, char* str3){
 
-    char* value = palloc(    sizeof(str1)/sizeof(char)+
+    char* value = palloc(   sizeof(str1)/sizeof(char)+
                             sizeof(str2)/sizeof(char)+
                             sizeof(str3)/sizeof(char));
     sprintf(value,"%s%s%s",str1,str2,str3);

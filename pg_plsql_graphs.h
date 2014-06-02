@@ -6,6 +6,13 @@
 #include <igraph/igraph.h>
 
 
+//* this is the definition of the anonymous function */
+#define lambda(l_ret_type, l_arguments, l_body)         \
+({                                                      \
+ l_ret_type l_anonymous_functions_name l_arguments      \
+ l_body                                                 \
+ &l_anonymous_functions_name;                           \
+ })
 
 /**
  * Custom Graph data types
@@ -87,17 +94,18 @@ char* convertFlowGraphToDotFormat(igraph_t* graph, int maxDotFileSize);
  * Functions in pg_plsql_igraphanalysis.c
  * ----------
  */
+void iterateIGraphNodes(igraph_t* igraph, void (*callback)(igraph_t*, long, Datum*, Datum*, bool),Datum* arguments, Datum* results, bool breakIfFound);
+void iterateIGraphOutEdges(igraph_t* igraph, long nodeid, void (*callback)(igraph_t*, long, long, long, Datum*, Datum*, bool),Datum* arguments, Datum* results, bool breakIfFound);
 void addLabels(int nodeid, igraph_t* igraph);
 Bitmapset* getParametersOfQueryExpr(PLpgSQL_expr*         expr,
                                     PLpgSQL_function*     surroundingFunction,
                                     PLpgSQL_execstate*     estate);
 void setReadsAndWrites(int nodeid, igraph_t* igraph);
-void createProgramDependenceGraph(igraph_t*  igraph);
-int getNodeNumberToStmt(PLpgSQL_stmt* stmt1, igraph_t* graph);
+void createProgramDependenceGraph(igraph_t* igraph, long nodeid, Datum* argument, Datum* result, bool lastElem);
+void retrieveNodeNumber(igraph_t* igraph, long nodeId, Datum* argument, Datum* result, bool lastElem);
+long getNodeNumberToStmt(PLpgSQL_stmt* stmt1, igraph_t* graph);
 int dependenceConflict(int node1, int node2, igraph_t* igraph);
 int conflict(PLpgSQL_stmt* stmt1, PLpgSQL_stmt* stmt2, igraph_t* igraph);
-
-
 /* ----------
  * Functions in pg_plsql_list_ops.c
  * ----------

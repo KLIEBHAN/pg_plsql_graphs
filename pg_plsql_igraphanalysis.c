@@ -8,6 +8,96 @@
 
 
 /**
+ * iterates over the iGraph Nodes and calls a given callback function
+ */
+void iterateIGraphNodes(igraph_t* igraph, void (*callback)(igraph_t*, long, Datum*, Datum*, bool),Datum* arguments, Datum* results, bool breakIfFound){
+
+    /* init and create a node iterator over all nodes */
+    igraph_vit_t nodeit;
+    igraph_vs_t allNodes;
+    igraph_vs_all(&allNodes);
+    igraph_vit_create(igraph,allNodes, &nodeit);
+
+
+    /* iterate over the nodes */
+    while (!IGRAPH_VIT_END(nodeit)) {
+        /* current node id */
+        long int nodeid = (long int) IGRAPH_VIT_GET(nodeit);
+
+
+        /* next iteration over graph nodes */
+        IGRAPH_VIT_NEXT(nodeit);
+
+
+
+        /* call the callback function */
+        (*callback)(igraph,nodeid,arguments,results,IGRAPH_VIT_END(nodeit));
+
+        if(breakIfFound && DatumGetPointer(*results) != NULL){
+            break;
+        }
+
+    }
+    /* destroy the graph iterator */
+    igraph_vit_destroy(&nodeit);
+    igraph_vs_destroy(&allNodes);
+}
+
+/**
+ * iterates over the iGraph Edges To the given node and calls a given callback function
+ */
+void iterateIGraphOutEdges(igraph_t* igraph, long nodeid, void (*callback)(igraph_t*, long, long, long, Datum*, Datum*, bool),Datum* arguments, Datum* results, bool breakIfFound){
+
+    /* init and create a iterator over the neighbor node that lie on outgoing edges */
+    igraph_es_t es;
+    igraph_eit_t eit;
+    igraph_es_incident(&es, nodeid, IGRAPH_OUT);
+    igraph_eit_create(igraph, es, &eit);
+    /* iterate over the neighbor node that lie on outgoing edges */
+    while (!IGRAPH_VIT_END(eit)) {
+        /* get the edge id */
+        igraph_integer_t eid = IGRAPH_EIT_GET(eit);
+
+
+        igraph_integer_t from;
+        igraph_integer_t to;
+        igraph_edge(igraph, eid, &from, &to);
+
+
+        /* next iteration over neighbor nodes */
+        IGRAPH_EIT_NEXT(eit);
+
+
+        (*callback)(igraph,eid,from,to,arguments,results,IGRAPH_VIT_END(eit));
+
+        if(breakIfFound && DatumGetPointer(*results) != NULL){
+            break;
+        }
+    }
+    /* destroy the neighbor iterator */
+    igraph_eit_destroy(&eit);
+    igraph_es_destroy(&es);/* call the callback function */
+}
+
+
+void iterateEdgesBridge(igraph_t* igraph, long nodeid, Datum* arguments, Datum* results, bool breakIfFound){
+    iterateIGraphOutEdges(igraph,nodeid,DatumGetPointer(arguments[0]),DatumGetPointer(arguments[1]),results,breakIfFound);
+}
+
+
+void iterateReachableEdges(igraph_t* graph, void (*callback)(igraph_t*, long, long, long, Datum*, Datum*, bool),Datum* arguments, Datum* results, bool breakIfFound){
+
+    Datum datums[2];
+
+    datums[0] = PointerGetDatum(callback);
+    datums[1] = PointerGetDatum(arguments);
+
+    iterateIGraphNodes(graph,&iterateEdgesBridge,datums,results,breakIfFound);
+}
+
+
+
+/**
  * adds labels to the current node and outgoing edges
  */
 void addLabels(int nodeid, igraph_t* igraph){
@@ -35,7 +125,7 @@ void addLabels(int nodeid, igraph_t* igraph){
 
         /* Concat Varibalename with := and the expression */
         label = concatStrings3(
-                                    varnumberToVarname(    assignment->varno,
+                                    varnumberToVarname( assignment->varno,
                                                         function->datums,
                                                         function->ndatums),
                                     " := ",
@@ -150,6 +240,7 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
     if(nodeid != 0){
         PLpgSQL_stmt* stmt = data.pointer;
 
+
         data.doublevalue = GAN(igraph,"function");
         PLpgSQL_function* function = data.pointer;
 
@@ -227,203 +318,190 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
 }
 
 
-void createProgramDependenceGraph(igraph_t*  igraph){
+void* getIGraphGlobalAttrP(igraph_t* igraph, const char* name){
+    union dblPointer data;
+    data.doublevalue = GAN(igraph,name);
+
+    if(data.doublevalue != data.doublevalue)
+        return NULL;
+
+    return data.pointer;
+}
+
+long getIGraphGlobalAttrL(igraph_t* igraph, const char* name){
+    union dblPointer data;
+    data.doublevalue = GAN(igraph,name);
+    return data.longvalue;
+}
 
 
-    union dblPointer func;
-    func.doublevalue = GAN(igraph,"function");
-    PLpgSQL_function* function = func.pointer;
+
+void* getIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid){
+    union dblPointer data;
+    data.doublevalue = VAN(igraph,name,nodeid);
 
 
-    /* init and create a node iterator over all nodes */
-    igraph_vit_t nodeit;
-    igraph_vs_t allNodes;
-    igraph_vs_all(&allNodes);
-    igraph_vit_create(igraph,allNodes, &nodeit);
+    if(data.doublevalue != data.doublevalue)
+        return NULL;
 
-    /* iterate over the nodes */
-    while (!IGRAPH_VIT_END(nodeit)) {
-        /* current node id */
-        long int nodeid = (long int) IGRAPH_VIT_GET(nodeit);
-
-        union dblPointer data;
-        data.doublevalue = VAN(igraph,"stmt",nodeid);
-        PLpgSQL_stmt* stmt = data.pointer;
-
-
-        data.doublevalue = VAN(igraph,"write",nodeid);
-        int* writeDnos = data.pointer;
-        data.doublevalue  = VAN(igraph,"nwrite",nodeid);
-        long nwriteDnos = data.longvalue;
-
-        if(data.doublevalue != data.doublevalue)
-            writeDnos = NULL;
-
-
-        if(writeDnos != NULL){
-
-            igraph_vector_t order;
-            igraph_vector_init(&order, 0);
-
-            igraph_dfs(igraph, /*root=*/nodeid, /*neimode=*/IGRAPH_OUT,
-                    /*unreachable=*/0, &order, 0, 0, 0, 0, 0,0);
+    return data.pointer;
+}
 
 
 
 
-            for(int i=0;i<igraph_vector_size(&order);i++){
-                unsigned int vid = VECTOR(order)[i];
-
-                if(vid && nodeid != vid){
-                    data.doublevalue = VAN(igraph,"read",vid);
-
-                    if(data.doublevalue == data.doublevalue){
-
-
-                        Bitmapset* bmsN = bms_copy(data.pointer);
-                        int dno;
-                        while (!bms_is_empty(bmsN) && (dno = bms_first_member(bmsN)) >= 0){
-                            PLpgSQL_datum *datum = function->datums[dno];
-
-                            if (datum->dtype == PLPGSQL_DTYPE_VAR){
+long getIGraphNodeAttrL(igraph_t* igraph, const char* name, long nodeid){
+    union dblPointer data;
+    data.doublevalue = VAN(igraph,name,nodeid);
+    return data.longvalue;
+}
 
 
 
-                                for(int j = 0; j < nwriteDnos; j++){
-
-                                    if(dno == writeDnos[j]){
-
-                                        /* read -> write dependency, add edge */
-
-                                        /* Add edges to the graph */
-                                        igraph_add_edge(igraph,nodeid,vid);
-
-                                        igraph_integer_t eid;
-                                        igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
-
-                                        SETEAS(igraph,"type",eid,"WR-DEPENDENCE");
-                                    }
-                                }
+void createProgramDependenceGraph(igraph_t* igraph, long nodeid, Datum* argument, Datum* result, bool lastElem){
 
 
+    PLpgSQL_function* function = getIGraphGlobalAttrP(igraph,"function");
+    PLpgSQL_stmt* stmt = getIGraphNodeAttrP(igraph,"stmt",nodeid);
+    int* writeDnos = getIGraphNodeAttrP(igraph,"write",nodeid);
+    long nwriteDnos = getIGraphNodeAttrL(igraph,"nwrite",nodeid);
+
+    if(writeDnos != NULL){
+
+        igraph_vector_t order;
+        igraph_vector_init(&order, 0);
+
+        igraph_dfs(igraph, /*root=*/nodeid, /*neimode=*/IGRAPH_OUT,
+                /*unreachable=*/0, &order, 0, 0, 0, 0, 0,0);
+
+
+
+
+        for(int i=0;i<igraph_vector_size(&order);i++){
+            unsigned int vid = VECTOR(order)[i];
+
+            if(vid && nodeid != vid){
+                Bitmapset* bmsN = bms_copy(getIGraphNodeAttrP(igraph,"read",vid));
+
+                int dno;
+                while (!bms_is_empty(bmsN) && (dno = bms_first_member(bmsN)) >= 0){
+                    PLpgSQL_datum *datum = function->datums[dno];
+
+                    if (datum->dtype == PLPGSQL_DTYPE_VAR){
+
+
+
+                        for(int j = 0; j < nwriteDnos; j++){
+
+                            if(dno == writeDnos[j]){
+
+                                /* read -> write dependency, add edge */
+
+                                /* Add edges to the graph */
+                                igraph_add_edge(igraph,nodeid,vid);
+
+                                igraph_integer_t eid;
+                                igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
+
+                                SETEAS(igraph,"type",eid,"WR-DEPENDENCE");
                             }
+                        }
+
+
+                    }
+                }
+
+
+
+                int* writeDnos2 = getIGraphNodeAttrP(igraph,"write",vid);
+                long nwriteDnos2 = getIGraphNodeAttrL(igraph,"nwrite",vid);
+
+                if(writeDnos2 != NULL){
+                    for(int j = 0; j < nwriteDnos; j++){
+
+
+                        for(int k = 0; k < nwriteDnos2; k++){
+                            /* write -> write dependency, add edge */
+                            /* Add edges to the graph */
+
+                            if(writeDnos[j] == writeDnos2[k]){
+                                igraph_add_edge(igraph,nodeid,vid);
+
+                                igraph_integer_t eid;
+                                igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
+
+                                SETEAS(igraph,"type",eid,"WW-DEPENDENCE");
+                            }
+
                         }
                     }
 
 
+                    Bitmapset* bms = bms_copy(getIGraphNodeAttrP(igraph,"read",nodeid));
+                    int dno;
+                    while (!bms_is_empty(bms) && (dno = bms_first_member(bms)) >= 0){
+                        PLpgSQL_datum *datum = function->datums[dno];
 
-                    data.doublevalue = VAN(igraph,"write",vid);
-                    int* writeDnos2 = data.pointer;
-
-                    data.doublevalue  = VAN(igraph,"nwrite",vid);
-                    long nwriteDnos2 = data.longvalue;
-
-                    if(data.doublevalue != data.doublevalue)
-                        writeDnos2 = NULL;
+                        if (datum->dtype == PLPGSQL_DTYPE_VAR){
 
 
-                    if(writeDnos2 != NULL){
-                        for(int j = 0; j < nwriteDnos; j++){
+                            for(int j = 0; j < nwriteDnos2; j++){
 
 
-                            for(int k = 0; k < nwriteDnos2; k++){
-                                /* write -> write dependency, add edge */
-                                /* Add edges to the graph */
+                                if(writeDnos2[j] == dno){
+                                    /* write -> read dependency, add edge */
 
-                                if(writeDnos[j] == writeDnos2[k]){
+                                    /* Add edges to the graph */
                                     igraph_add_edge(igraph,nodeid,vid);
 
                                     igraph_integer_t eid;
                                     igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
 
-                                    SETEAS(igraph,"type",eid,"WW-DEPENDENCE");
+                                    SETEAS(igraph,"type",eid,"RW-DEPENDENCE");
                                 }
-
                             }
-                        }
 
-
-
-                        data.doublevalue = VAN(igraph,"read",nodeid);
-                        Bitmapset* bms = bms_copy(data.pointer);
-                        int dno;
-                        while (!bms_is_empty(bms) && (dno = bms_first_member(bms)) >= 0){
-                            PLpgSQL_datum *datum = function->datums[dno];
-
-                            if (datum->dtype == PLPGSQL_DTYPE_VAR){
-
-
-                                for(int j = 0; j < nwriteDnos2; j++){
-
-
-                                    if(writeDnos2[j] == dno){
-                                        /* write -> read dependency, add edge */
-
-                                        /* Add edges to the graph */
-                                        igraph_add_edge(igraph,nodeid,vid);
-
-                                        igraph_integer_t eid;
-                                        igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
-
-                                        SETEAS(igraph,"type",eid,"RW-DEPENDENCE");
-                                    }
-                                }
-
-                            }
                         }
                     }
-
-
                 }
 
 
             }
 
-            igraph_vector_destroy(&order);
 
         }
 
+        igraph_vector_destroy(&order);
 
-        /* next iteration over graph nodes */
-        IGRAPH_VIT_NEXT(nodeit);
     }
-    /* destroy the graph iterator */
-    igraph_vit_destroy(&nodeit);
-    igraph_vs_destroy(&allNodes);
+
 }
 
-int getNodeNumberToStmt(PLpgSQL_stmt* stmt1, igraph_t* graph){
-    /* init and create a node iterator over all nodes */
-    igraph_vit_t nodeit;
-    igraph_vs_t allNodes;
-    igraph_vs_all(&allNodes);
-    igraph_vit_create(graph,allNodes, &nodeit);
+/**
+ * if the statement of the current node equals the given node set the result to the node number
+ */
+void retrieveNodeNumber(igraph_t* igraph, long nodeId, Datum* argument, Datum* result, bool lastElem){
+    PLpgSQL_stmt* argStmt = (PLpgSQL_stmt*)DatumGetPointer(*argument);
 
-    int id = -1;
+    PLpgSQL_stmt* stmt = getIGraphNodeAttrP(igraph,"stmt",nodeId);
 
-    /* iterate over the nodes */
-    while (!IGRAPH_VIT_END(nodeit)) {
-        /* current node id */
-        long int nodeid = (long int) IGRAPH_VIT_GET(nodeit);
 
-        union dblPointer data;
-        data.doublevalue = VAN(graph,"stmt",nodeid);
-        PLpgSQL_stmt* stmt = data.pointer;
-
-        if(stmt1 == stmt){
-            id = nodeid;
-            break;
-        }
-
-        IGRAPH_VIT_NEXT(nodeit);
+    if(argStmt == stmt){
+        Datum datum = Int64GetDatum(nodeId);
+        *result = datum;
     }
 
+}
 
 
-    /* destroy the graph iterator */
-    igraph_vit_destroy(&nodeit);
-    igraph_vit_create(graph,allNodes, &nodeit);
-    return id;
+long getNodeNumberToStmt(PLpgSQL_stmt* stmt1, igraph_t* graph){
+    Datum stmt     = PointerGetDatum(stmt1);
+    Datum resDatum = PointerGetDatum(NULL);
+
+
+    iterateIGraphNodes(graph,&retrieveNodeNumber,&stmt,&resDatum,1);
+
+    return DatumGetInt64(resDatum);
 }
 
 

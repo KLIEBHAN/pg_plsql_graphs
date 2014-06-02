@@ -78,6 +78,71 @@ void printReadsAndWrites(igraph_t* graph){
     igraph_vs_destroy(&allNodes);
 }
 
+
+
+void covertNodeLabelToDot(igraph_t* graph, long nodeid, Datum* arguments, Datum* result){
+    char* buf = DatumGetPointer(arguments[0]);
+    char* additionalAttributes = DatumGetCString(arguments[1]);
+
+    /* if a label vertex attribute is given draw it to the current node */
+    sprintf(eos(buf),"%li[label=\"%s\"]", nodeid, VAS(graph,"label",nodeid));
+    if(additionalAttributes != NULL)
+        sprintf(eos(buf),"%s",additionalAttributes);
+    sprintf(eos(buf),";\n");
+}
+
+
+void convertEdgeLabelToDot(igraph_t* graph, long eid, long from, long to, Datum* arguments, Datum* result){
+    char* buf = DatumGetPointer(arguments[0]);
+    bool showLabels = DatumGetBool(arguments[1]);
+
+    List* list = DatumGetPointer(arguments[2]);
+
+
+    ListCell* cell;
+    foreach(cell, list){
+        List* l = lfirst(cell);
+
+
+        if(strcmp(EAS(graph,"type",eid),linitial(l)) == 0){
+            sprintf(eos(buf),"%li -> %li",from,to);
+            sprintf(eos(buf),"[penwidth=0.4]");
+            if(showLabels){
+                sprintf(eos(buf),"[label=\"\%s\"]",EAS(graph,"label",eid));
+            }
+            sprintf(eos(buf),"[color=%s]",lsecond(l));
+
+
+            if(l->length > 2){
+                sprintf(eos(buf),"%s",lthird(l));
+            }
+
+        }
+
+    }
+
+
+
+
+}
+
+
+
+
+void buildRank(igraph_t* graph, long nodeid, Datum* arguments, Datum* result, bool lastElement){
+    char* buf = DatumGetPointer(*arguments);
+
+    /* if a label vertex attribute is given draw it to the current node */
+    sprintf(eos(buf),"%li",nodeid);
+
+
+    if(lastElement)
+        sprintf(eos(buf),";");
+    else
+        sprintf(eos(buf),",");
+}
+
+
 /**
  * Converts the given igraph program dependence graph to dot format
  */
@@ -86,6 +151,7 @@ char* convertProgramDependecGraphToDotFormat(    igraph_t* graph,
                                                 int maxDotFileSize){
 
     char* buf = palloc(maxDotFileSize);
+    Datum bufDatum = PointerGetDatum(buf);
     strcpy(buf,"");
 
 
@@ -99,136 +165,41 @@ char* convertProgramDependecGraphToDotFormat(    igraph_t* graph,
 
 
 
-    /* init and create a node iterator over all nodes */
-    igraph_vit_t nodeit;
-    igraph_vs_t allNodes;
-    igraph_vs_all(&allNodes);
-    igraph_vit_create(graph,allNodes, &nodeit);
+
+    Datum datumsNodes[2];
+    datumsNodes[0] = bufDatum;
+    datumsNodes[1] = CStringGetDatum(NULL);
+
+    iterateIGraphNodes(graph,&covertNodeLabelToDot,datumsNodes,NULL,0);
+
+    Datum datums[7];
+    datums[0] = bufDatum;
+    datums[1] = BoolGetDatum(0);
 
 
-    /* iterate over the nodes */
-    while (!IGRAPH_VIT_END(nodeit)) {
-        /* current node id */
-        long int nodeid = (long int) IGRAPH_VIT_GET(nodeit);
+    List* types = list_make4(
+                                list_make3("FLOW",         "black", "[style=dashed]"),
+                                list_make2("RW-DEPENDENCE","blue"),
+                                list_make2("WR-DEPENDENCE","green"),
+                                list_make2("WW-DEPENDENCE","red"));
 
-        /* if a label vertex attribute is given draw it to the current node */
-        sprintf(eos(buf),"%li[label=\"%s\"];\n", nodeid, VAS(graph,"label",nodeid));
+    datums[2]  = PointerGetDatum(types);
 
-
-
-        /* next iteration over graph nodes */
-        IGRAPH_VIT_NEXT(nodeit);
-
-
-        if(!IGRAPH_VIT_END(nodeit)){
-            sprintf(eos(buf),
-                        "%li -> %li[style=invis];\n",
-                        nodeid,
-                        (long int) IGRAPH_VIT_GET(nodeit));
-        }
-
-    }
+    iterateReachableEdges(graph,&convertEdgeLabelToDot,datums,NULL,0);
 
 
 
-    /* destroy the graph iterator */
-    igraph_vit_destroy(&nodeit);
-    igraph_vit_create(graph,allNodes, &nodeit);
-
-    /* iterate over the nodes */
-    while (!IGRAPH_VIT_END(nodeit)) {
-        /* current node id */
-        long int nodeid = (long int) IGRAPH_VIT_GET(nodeit);
-
-        /* if a label vertex attribute is given draw it to the current node */
-        if(igraph_cattribute_has_attr(graph,IGRAPH_ATTRIBUTE_VERTEX,"label")){
-            sprintf(eos(buf),"%li[label=\"%s\"];\n", nodeid, VAS(graph,"label",nodeid));
-        }
-        /* init and create a iterator over the neighbor node that lie on outgoing edges */
-        igraph_es_t es;
-        igraph_eit_t eit;
-        igraph_es_incident(&es, nodeid, IGRAPH_OUT);
-        igraph_eit_create(graph, es, &eit);
-        /* iterate over the neighbor node that lie on outgoing edges */
-        while (!IGRAPH_VIT_END(eit)) {
-            /* get the edge id */
-            igraph_integer_t eid = IGRAPH_EIT_GET(eit);
-
-
-            igraph_integer_t from;
-            igraph_integer_t to;
-            igraph_edge(graph, eid, &from, &to);
-
-            if(strcmp(EAS(graph,"type",eid),"FLOW") == 0){
-                /* print the edge */
-                sprintf(eos(buf),"%i -> %i[style=dashed][penwidth=0.4];",from, to);
-            }
-            if(strcmp(EAS(graph,"type",eid),"RW-DEPENDENCE") == 0){
-                /* print the edge */
-                sprintf(eos(buf),"%i -> %i [label=\"\%s\"][color=blue];\n",
-                                    from,
-                                    to,
-                                    EAS(graph,"label",eid));
-            }
-            if(strcmp(EAS(graph,"type",eid),"WR-DEPENDENCE") == 0){
-                /* print the edge */
-                sprintf(eos(buf),"%i -> %i [label=\"\%s\"][color=green];\n",
-                                    from,
-                                    to,
-                                    EAS(graph,"label",eid));
-            }
-
-
-            if(strcmp(EAS(graph,"type",eid),"WW-DEPENDENCE") == 0){
-                /* print the edge */
-                sprintf(eos(buf),"%i -> %i [label=\"\%s\"][color=red];\n",
-                                    from,
-                                    to,
-                                    EAS(graph,"label",eid));
-            }
-
-
-            /* next iteration over neighbor nodes */
-            IGRAPH_EIT_NEXT(eit);
-        }
-        /* destroy the neighbor iterator */
-        igraph_eit_destroy(&eit);
-        igraph_es_destroy(&es);
-
-        /* next iteration over graph nodes */
-        IGRAPH_VIT_NEXT(nodeit);
-    }
-
-
-
-    /* destroy the graph iterator */
-    igraph_vit_destroy(&nodeit);
-    igraph_vit_create(graph,allNodes, &nodeit);
 
 
     if(sameLevel){
         sprintf(eos(buf),"\n{rank=same; ");
-        /* iterate over the nodes */
-        while (!IGRAPH_VIT_END(nodeit)) {
-            /* current node id */
-            long int nodeid = (long int) IGRAPH_VIT_GET(nodeit);
-            sprintf(eos(buf),"%li",nodeid);
 
-            /* if a label vertex attribute is given draw it to the current node */
-            /* next iteration over graph nodes */
-            IGRAPH_VIT_NEXT(nodeit);
+        iterateIGraphNodes(graph,&buildRank,&bufDatum,NULL,0);
 
-            if(!IGRAPH_VIT_END(nodeit))
-                sprintf(eos(buf),",");
-            else
-                sprintf(eos(buf),";");
-
-        }
 
         sprintf(eos(buf),"}\n");
     }
 
-    igraph_vs_destroy(&allNodes);
 
     /* finish the graph */
     sprintf(eos(buf),"}");
@@ -243,72 +214,30 @@ char* convertProgramDependecGraphToDotFormat(    igraph_t* graph,
 char* convertFlowGraphToDotFormat(igraph_t* graph, int maxDotFileSize){
 
     char* buf = palloc(maxDotFileSize);
+    Datum bufDatum = PointerGetDatum(buf);
+
+
     strcpy(buf, "");
 
     /* start of digraph */
     sprintf(buf,"digraph g {\n");/*splines=ortho; */
 
-    /* init and create a node iterator over all nodes */
-    igraph_vit_t nodeit;
-    igraph_vs_t allNodes;
-    igraph_vs_all(&allNodes);
-    igraph_vit_create(graph,allNodes, &nodeit);
+    Datum datumsNodes[2];
+    datumsNodes[0] = bufDatum;
+    datumsNodes[1] = CStringGetDatum("[shape=box]");
+
+    iterateIGraphNodes(graph,&covertNodeLabelToDot,datumsNodes,NULL,0);
 
 
-    /* iterate over the nodes */
-    while (!IGRAPH_VIT_END(nodeit)) {
-        /* current node id */
-        long int nodeid = (long int) IGRAPH_VIT_GET(nodeit);
+    Datum datumsEdges[3];
+    datumsEdges[0] = bufDatum;
+    datumsEdges[1] = BoolGetDatum(1);
+    List* types = list_make1(
+                                list_make2("FLOW",         "black"));
 
-        /* if a label vertex attribute is given draw it to the current node */
-        if(igraph_cattribute_has_attr(graph,IGRAPH_ATTRIBUTE_VERTEX,"label")){
-            sprintf(eos(buf),
-                        "%li[label=\"%s\"][shape=box];\n",
-                        nodeid,
-                        VAS(graph,"label",nodeid));
-        }
+    datumsEdges[2]  = PointerGetDatum(types);
+    iterateReachableEdges(graph,&convertEdgeLabelToDot,datumsEdges,NULL,0);
 
-        /* init and create a iterator over the neighbor node that lie on outgoing edges */
-        igraph_es_t es;
-        igraph_eit_t eit;
-        igraph_es_incident(&es, nodeid, IGRAPH_OUT);
-        igraph_eit_create(graph, es, &eit);
-        /* iterate over the neighbor node that lie on outgoing edges */
-        while (!IGRAPH_VIT_END(eit)) {
-            /* get the edge id */
-            igraph_integer_t eid = IGRAPH_EIT_GET(eit);
-
-
-            igraph_integer_t from;
-            igraph_integer_t to;
-            igraph_edge(graph, eid, &from, &to);
-
-            if(strcmp(EAS(graph,"type",eid),"FLOW") == 0){
-                /* print the edge */
-                sprintf(eos(buf),"%i -> %i [label=\"\%s\"];\n",
-                                    from,
-                                    to,
-                                    EAS(graph,"label",eid));
-            }
-
-
-
-            /* next iteration over neighbor nodes */
-            IGRAPH_EIT_NEXT(eit);
-        }
-        /* destroy the neighbor iterator */
-        igraph_eit_destroy(&eit);
-        igraph_es_destroy(&es);
-
-        /* next iteration over graph nodes */
-        IGRAPH_VIT_NEXT(nodeit);
-    }
-
-
-
-    /* destroy the graph iterator */
-    igraph_vit_destroy(&nodeit);
-    igraph_vs_destroy(&allNodes);
 
     /* finish the graph */
     sprintf(eos(buf),"}");

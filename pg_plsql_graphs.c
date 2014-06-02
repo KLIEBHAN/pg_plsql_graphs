@@ -100,22 +100,22 @@ Datum        pg_plsql_graphs(PG_FUNCTION_ARGS);
 void        _PG_init(void);
 
 static void pgpg_shmem_startup(void);
-static void pgpg_func_beg(    PLpgSQL_execstate*    estate,
-                            PLpgSQL_function*    func);
-static void pgpg_func_end(    PLpgSQL_execstate*    estate,
-                            PLpgSQL_function*    func);
-static uint32 pgpg_hash_fn(    const void*    key,
-                            Size         keysize);
-static int    pgpg_match_fn(    const void*    key1,
+static void pgpg_func_beg(PLpgSQL_execstate*    estate,
+                          PLpgSQL_function*     func);
+static void pgpg_func_end(PLpgSQL_execstate*    estate,
+                          PLpgSQL_function*     func);
+static uint32 pgpg_hash_fn(const void*     key,
+                           Size            keysize);
+static int    pgpg_match_fn(const void*    key1,
                             const void*    key2,
                             Size keysize);
 
-static pgpgEntry * entry_alloc(    pgpgHashKey*    key,
-                                bool             sticky,
+static pgpgEntry * entry_alloc( pgpgHashKey*    key,
+                                bool            sticky,
                                 int             id,
-                                char*             functionName,
-                                char*             flowGraphDot,
-                                char*             programDepencenceGraphDot);
+                                char*           functionName,
+                                char*           flowGraphDot,
+                                char*           programDepencenceGraphDot);
 static void entry_dealloc(void);
 
 /* Saved hook values in case of unload */
@@ -156,10 +156,10 @@ _PG_init(void)
 
 
 
-    RequestAddinShmemSpace(    sizeof(PLpgSQL_plugin)+
+    RequestAddinShmemSpace( sizeof(PLpgSQL_plugin)+
                             sizeof(pgpgSharedState)+
-                            hash_estimate_size(    pgpg_max,
-                                                sizeof(pgpgEntry)));
+                            hash_estimate_size(pgpg_max,
+                                               sizeof(pgpgEntry)));
     RequestAddinLWLocks(1);
 
 
@@ -286,12 +286,11 @@ void createGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
     igraph_t* igraph = buildIGraph(status->nodes,function,estate);
 
     /* perform operations depenence analysis on igraph */
-    createProgramDependenceGraph(igraph);
-
+    iterateIGraphNodes(igraph,&createProgramDependenceGraph,NULL,NULL,0);
     /* convert the igraph to a dot format */
-    char* programDepenceGraphDot = convertProgramDependecGraphToDotFormat(    igraph,
-                                                                            1,
-                                                                            MAXDOTFILESIZE);
+    char* programDepenceGraphDot = convertProgramDependecGraphToDotFormat(igraph,
+                                                                          1,
+                                                                          MAXDOTFILESIZE);
     char* flowGraphDot = convertFlowGraphToDotFormat(igraph,MAXDOTFILESIZE);
 
 
@@ -347,13 +346,13 @@ Datum pg_plsql_graphs(PG_FUNCTION_ARGS){
     pgpgEntry * entry;
 
     /* Info about the return set */
-    ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
-    TupleDesc    tupdesc;
-    Tuplestorestate *tupstore;
-    MemoryContext per_query_ctx;
-    MemoryContext oldcontext;
-    Oid            userid = GetUserId();
-    HASH_SEQ_STATUS hash_seq;
+    ReturnSetInfo*   rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
+    TupleDesc        tupdesc;
+    Tuplestorestate* tupstore;
+    MemoryContext    per_query_ctx;
+    MemoryContext    oldcontext;
+    Oid              userid = GetUserId();
+    HASH_SEQ_STATUS  hash_seq;
 
 
     /* hash table must exist already */
@@ -481,11 +480,11 @@ pgpg_match_fn(const void *key1, const void *key2, Size keysize)
  */
 static pgpgEntry *
 entry_alloc(pgpgHashKey*    key,
-            bool             sticky,
+            bool            sticky,
             int             id,
-            char*             functionName,
-            char*             flowGraphDot,
-            char*             programDepencenceGraphDot)
+            char*           functionName,
+            char*           flowGraphDot,
+            char*           programDepencenceGraphDot)
 {
     pgpgEntry  *entry;
     bool        found;
@@ -523,8 +522,8 @@ static void
 entry_dealloc(void)
 {
     HASH_SEQ_STATUS hash_seq;
-    pgpgEntry  *entry;
-    int            nvictims = 5;
+    pgpgEntry*      entry;
+    int             nvictims = 5;
 
     int i = 0;
     /* iterate hash and free first nvictims items */
