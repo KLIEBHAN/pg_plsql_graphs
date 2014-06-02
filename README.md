@@ -154,7 +154,7 @@ shared_preload_libraries = 'pg_plsql_graphs'   # (change requires restart)
 CREATE EXTENSION pg_plsql_graphs;
 ```
 
-- Now for every **plpgsql function** you call, a corresponding entry with the **flow** and **depencence graphs** in **dot** format is created in the **pg_plsql_graphs** view.
+- Now for every **plpgsql function** you call, a corresponding entry with the **flow** and **depencence graphs** in **dot** format is created a HashTable that is accessable by the **pg_plsql_graphs** view.
 
 - After calling a **plpgsql function** you can now query this view e.g. by typing: 
 
