@@ -48,7 +48,7 @@ void printReadsAndWrites(igraph_t* graph, long nodeid, Datum* arguments, Datum* 
 /**
  * Append Node data to the dot string buffer
  */
-void appendNodeToDot(igraph_t* graph, long nodeid, Datum* arguments, Datum* result){
+void appendNodeToDot(igraph_t* graph, long nodeid, Datum* arguments, Datum* result, bool breakIfFound){
     char* buf = DatumGetPointer(arguments[0]);
     char* additionalAttributes = DatumGetCString(arguments[1]);
 
@@ -63,13 +63,13 @@ void appendNodeToDot(igraph_t* graph, long nodeid, Datum* arguments, Datum* resu
 /**
  * Append Edge to the dot string buffer
  */
-void appendEdgeToDot(igraph_t* graph, long eid, long from, long to, Datum* arguments, Datum* result){
+void appendEdgeToDot(igraph_t* graph, long eid, long from, long to, Datum* arguments, Datum* result, bool breakIfFound){
     /* The buffer to append the dot data to */
     char* buf = DatumGetPointer(arguments[0]);
     /* show labels attribute */
     bool showLabels = DatumGetBool(arguments[1]);
     /* edge types */
-    List* edgeTypes = DatumGetPointer(arguments[2]);
+    List* edgeTypes = (List*)DatumGetPointer(arguments[2]);
 
 
     ListCell* cell;
@@ -145,7 +145,7 @@ char* convertGraphToDotFormat(  igraph_t* graph,
     sprintf(eos(buf),"edge[arrowsize=0.6,penwidth=0.6];\n");
     sprintf(eos(buf),"node[fontsize=10];\n");
     if(additionalGeneralConfiguration != NULL)
-        sprintf(eos(buf),additionalGeneralConfiguration);
+        sprintf(eos(buf),"%s",additionalGeneralConfiguration);
 
     /* arguments for nodes */
     Datum datumsNodes[2];

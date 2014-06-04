@@ -22,6 +22,26 @@
 #include "utils/rel.h"
 #include "utils/syscache.h"
 
+
+
+/**
+ * Workaround to get the parameters of a query as Bitmapset
+ */
+Bitmapset* getParametersOfQueryExpr(PLpgSQL_expr*         expr,
+                                    PLpgSQL_function*     surroundingFunction,
+                                    PLpgSQL_execstate*     estate){
+
+    expr->func = surroundingFunction;
+    SPI_prepare_params(expr->query,
+                              (ParserSetupHook) pg_plsql_parser_setup,
+                              (void *) expr,
+                              0);
+
+
+    return expr->paramnos;
+}
+
+
 /**
  * Woraround for resolving parameters
  *

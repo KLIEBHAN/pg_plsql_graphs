@@ -6,28 +6,6 @@
 #include <igraph/igraph.h>
 #include "pg_plsql_graphs.h"
 
-/**
- * Converts the variable with the given id to its refname
- */
-char* varnumberToVarname(int varno,PLpgSQL_datum** datums, int ndatums){
-
-    /* iterate over the datums */
-    for(int i=0; i<ndatums;i++){
-        PLpgSQL_datum* datum = datums[i];
-        /* check if datum type is a variable */
-        if (datum->dtype == PLPGSQL_DTYPE_VAR) {
-            PLpgSQL_variable* myvar = ((PLpgSQL_variable*)datum);
-            /* check if it has the given variable number */
-            if(myvar->dno == varno){
-                /* return the refname of the variable */
-                return myvar->refname;
-            }
-        }
-    }
-    return (char*)NULL;
-}
-
-
 
 
 struct graph_status* initStatus(int initnodeid){
@@ -183,3 +161,91 @@ void createProgramGraph(int* newnodeid,
 
     }
 }
+
+/**
+ * Build the igraph
+ */
+igraph_t* buildIGraph(List* nodes,
+                      PLpgSQL_function* function,
+                      PLpgSQL_execstate * estate){
+
+    /* init a new igraph */
+    igraph_t* graph = palloc(sizeof(igraph_t));
+    /* init the edges */
+    igraph_vector_t graphedges;
+    igraph_vector_init(&graphedges, 0);
+
+    /* turn on attribute handling */
+    igraph_i_set_attribute_table(&igraph_cattribute_table);
+
+    igraph_empty(graph,nodes->length,1);
+
+    union dblPointer data;
+    data.pointer = function;
+    SETGAN(graph,"function",data.doublevalue);
+
+    data.pointer = estate;
+    SETGAN(graph,"estate",data.doublevalue);
+
+
+    ListCell* node;
+    /* iterate over nodes */
+    foreach(node, nodes){
+        struct node* no = lfirst(node);
+
+
+        union dblPointer data;
+        data.pointer = no->stmt;
+
+        SETVAN(graph,"stmt",no->key,data.doublevalue);
+
+
+        setReadsAndWrites(no->key,graph);
+
+
+        ListCell* e;
+        /* iterate over outgoing edges of the current node */
+        foreach(e,no->edges){
+            struct edge* edge = lfirst(e);
+
+            /* Add edges to the graph */
+            igraph_add_edge(graph,
+                            edge->sourceid,
+                            edge->targetid);
+
+            igraph_integer_t eid;
+            igraph_get_eid(graph,
+                           &eid,
+                           edge->sourceid,
+                           edge->targetid,
+                           1,
+                           0);
+
+            setIGraphEdgeAttrS(graph,"type",eid,"FLOW");
+
+        }
+
+        /* Add the labels to the current node and outgoing edges */
+        addLabels(no->key,graph);
+
+    }
+
+
+
+
+    return graph;
+}
+
+igraph_t* createFlowGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
+
+    int newnodeid = 0;
+    struct graph_status* status  = initStatus(newnodeid);
+    /* create the flow graph to the given PL/SQL function */
+    createProgramGraph(&newnodeid,status,function->action->body,function);
+
+
+    /* convert the graph to an igraph */
+    return buildIGraph(status->nodes,function,estate);
+
+}
+

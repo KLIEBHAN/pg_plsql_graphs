@@ -43,61 +43,13 @@
 #include "mb/pg_wchar.h"
 #include "miscadmin.h"
 #include "pg_plsql_graphs.h"
-#define MAXDOTFILESIZE 4096
 PG_MODULE_MAGIC;
 
 
 
-/*
- * Shared state
- */
-typedef struct pgpgSharedState
-{
-    LWLock*            lock;            /* protects hashtable search/modification */
-    PLpgSQL_plugin* plugin;            /* PlpgSQL_pluging struct */
-    int         counter;            /* counter for ids */
-
-} pgpgSharedState;
-
-
-/*
- * Hashtable key that defines the identity of a hashtable entry.  We separate
- * entries by user, database and a function id. Also every entey has a unique id.
- */
-typedef struct pgpgHashKey
-{
-    Oid            userid;            /* user OID */
-    Oid            dbid;            /* database OID */
-    Oid            functionid;        /* function OID */
-    long        uniqueid;        /* unique ID */
-
-} pgpgHashKey;
-
-/*
- * Dot dependency graphs to plpgsql functions
- */
-typedef struct DotStruct
-{
-    int64        id;
-    char        functionName[255];
-    char        flowGraphDot[MAXDOTFILESIZE];
-    char        programDepencenceGraphDot[MAXDOTFILESIZE];
-} DotStruct;
-
-
-
-/*
- * Statistics per statement
- */
-typedef struct pgpgEntry
-{
-    pgpgHashKey key;            /* hash key of entry - MUST BE FIRST */
-    DotStruct    dotStruct;        /* the dotfiles for this function */
-    slock_t        mutex;            /* protects the dotStruct only */
-} pgpgEntry;
-
 Datum        pg_plsql_graphs(PG_FUNCTION_ARGS);
 void        _PG_init(void);
+void        _PG_fini(void);
 
 static void pgpg_shmem_startup(void);
 static void pgpg_func_beg(PLpgSQL_execstate*    estate,
@@ -117,6 +69,7 @@ static pgpgEntry * entry_alloc( pgpgHashKey*    key,
                                 char*           flowGraphDot,
                                 char*           programDepencenceGraphDot);
 static void entry_dealloc(void);
+
 
 /* Saved hook values in case of unload */
 static shmem_startup_hook_type prev_shmem_startup_hook = NULL;
@@ -274,16 +227,10 @@ static void pgpg_func_end(PLpgSQL_execstate *estate, PLpgSQL_function *func){
  */
 void createGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
 
-    int newnodeid = 0;
-    struct graph_status* status  = initStatus(newnodeid);
-    /* create the flow graph to the given PL/SQL function */
-    createProgramGraph(&newnodeid,status,function->action->body,function);
+    /* convert the statements to an flow-graph */
+    igraph_t* igraph = createFlowGraph(function,estate);
 
-
-    /* convert the graph to an igraph */
-    igraph_t* igraph = buildIGraph(status->nodes,function,estate);
-
-    /* perform operations depenence analysis on igraph */
+    /* perform depenence analysis operations on igraph */
     iterateIGraphNodes(igraph,&createProgramDependenceGraph,NULL,NULL,0);
 
 
@@ -366,7 +313,6 @@ PG_FUNCTION_INFO_V1(pg_plsql_graphs);
  */
 Datum pg_plsql_graphs(PG_FUNCTION_ARGS){
 
-    pgpgHashKey key;
     pgpgEntry * entry;
 
     /* Info about the return set */
@@ -375,7 +321,6 @@ Datum pg_plsql_graphs(PG_FUNCTION_ARGS){
     Tuplestorestate* tupstore;
     MemoryContext    per_query_ctx;
     MemoryContext    oldcontext;
-    Oid              userid = GetUserId();
     HASH_SEQ_STATUS  hash_seq;
 
 
@@ -428,7 +373,6 @@ Datum pg_plsql_graphs(PG_FUNCTION_ARGS){
         bool        nulls[tupdesc->natts];
         int            i = 0;
         int            j = 0;
-        DotStruct    tmp;
 
         memset(values, 0, sizeof(values));
         memset(nulls, 0, sizeof(nulls));
