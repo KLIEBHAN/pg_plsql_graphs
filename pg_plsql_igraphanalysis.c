@@ -444,6 +444,15 @@ bool containsSameVariable(Bitmapset* bms1,Bitmapset* bms2,PLpgSQL_function* func
     return 0;
 }
 
+void addEdgeWithAttr(igraph_t* igraph, long sourceNodeId, long targetNodeId, char* attr, char* value){
+
+    igraph_integer_t eid;
+    /* Add edge to the graph */
+    igraph_add_edge(igraph,sourceNodeId,sourceNodeId);
+    igraph_get_eid(igraph, &eid,sourceNodeId,sourceNodeId,1,0);
+    /* set dependence attribute */
+    SETEAS(igraph,attr,eid,value);
+}
 
 /**
  * Add WR, RW and WW dependence edges to the reachable nodes of the current node and therefore create a program depence graph
@@ -461,15 +470,15 @@ void createProgramDependenceGraph(igraph_t* igraph, long nodeid, Datum* argument
     }
 
 
+    /* reachable nodes in dfs fashion */
     igraph_vector_t order;
     igraph_vector_init(&order, 0);
-
     igraph_dfs(igraph, /*root=*/nodeid, /*neimode=*/IGRAPH_OUT,
             /*unreachable=*/0, &order, 0, 0, 0, 0, 0,0);
 
 
 
-    /* iterate over reachable edges of the current node */
+    /* iterate over reachable edges of the current node in dfs fashion */
     for(int i=0;order.stor_begin != NULL && i<igraph_vector_size(&order);i++){
         /* current vertex id */
         unsigned int vid = VECTOR(order)[i];
@@ -479,53 +488,22 @@ void createProgramDependenceGraph(igraph_t* igraph, long nodeid, Datum* argument
             Bitmapset* writeBms2 = getIGraphNodeAttrP(igraph,"write",vid);
 
             if(containsSameVariable(writeBms1,readBms2,function)){
-
                 /* read -> write dependency, add edge */
-
-                /* Add edge to the graph */
-                igraph_add_edge(igraph,nodeid,vid);
-                igraph_integer_t eid;
-                igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
-
-                SETEAS(igraph,"type",eid,"WR-DEPENDENCE");
+                addEdgeWithAttr(igraph,nodeid,vid,"type","WR-DEPENDENCE");
             }
 
 
             if(containsSameVariable(writeBms1,writeBms2,function)){
-
                 /* write -> write dependency, add edge */
-
-                /* Add edge to the graph */
-                igraph_add_edge(igraph,nodeid,vid);
-                igraph_integer_t eid;
-                igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
-
-                SETEAS(igraph,"type",eid,"WW-DEPENDENCE");
+                addEdgeWithAttr(igraph,nodeid,vid,"type","WW-DEPENDENCE");
             }
 
 
             if(containsSameVariable(readBms1,writeBms2,function)){
-
                 /* write -> read dependency, add edge */
-
-                /* Add edge to the graph */
-                igraph_add_edge(igraph,nodeid,vid);
-                igraph_integer_t eid;
-                igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
-
-                SETEAS(igraph,"type",eid,"RW-DEPENDENCE");
+                addEdgeWithAttr(igraph,nodeid,vid,"type","RW-DEPENDENCE");
             }
-
-
-
-
-
         }
-
-
-
-
-
     }
     igraph_vector_destroy(&order);
 
@@ -567,13 +545,13 @@ int dependenceConflict(int node1, int node2, igraph_t* igraph){
         return 1;
     }
 
+    int retval = 0;
 
 
+    /* iterate incident edges */
     igraph_vector_t eids;
     igraph_vector_init(&eids,0);
     igraph_incident(igraph, &eids,node1, IGRAPH_OUT);
-
-    int retval = 0;
 
     for(int i=0;i<igraph_vector_size(&eids);i++){
         int eid = VECTOR(eids)[i];
@@ -582,48 +560,19 @@ int dependenceConflict(int node1, int node2, igraph_t* igraph){
 
         /* found a edge from the first to the second node */
         if(to == node2){
-
             const char* type = EAS(igraph,"type",eid);
             /* check if type is set */
             if(type){
-                /* RW-DEPENDENCY */
-                if(strcmp(type,"RW-DEPENDENCE") == 0){
-                    printf("RW-DEPENDENCE found from %s to %s!\n",
-                                VAS(igraph,"label",from),
-                                VAS(igraph,"label",to));
+                /* DEPENDENCY */
+                if( strcmp(type,"RW-DEPENDENCE") == 0 ||
+                    strcmp(type,"WR-DEPENDENCE") == 0 ||
+                    strcmp(type,"WW-DEPENDENCE") == 0)    {
                     retval = 1;
                     break;
                 }
-                /* WR-DEPENDENCY */
-                if(strcmp(type,"WR-DEPENDENCE") == 0){
-                    printf("WR-DEPENDENCE found from %s to %s!\n",
-                                VAS(igraph,"label",from),
-                                VAS(igraph,"label",to));
-                    retval = 1;
-                    break;
-                }
-                /* WW-DEPENDENCY */
-                if(strcmp(type,"WW-DEPENDENCE") == 0){
-                    printf("WW-DEPENDENCE found from %s to %s!\n",
-                                VAS(igraph,"label",from),
-                                VAS(igraph,"label",to));
-                    retval = 1;
-                    break;
-                }
-
             }
-
-
         }
-
     }
-
-    if(retval == 0){
-        printf("No confict found from %s to %s!\n",
-                    VAS(igraph,"label",node1),
-                    VAS(igraph,"label",node2));
-    }
-
     igraph_vector_destroy(&eids);
     return retval;
 }
