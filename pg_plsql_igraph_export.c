@@ -7,7 +7,6 @@
 #include "pg_plsql_graphs.h"
 #include "storage/fd.h"
 #define eos(s) ((s)+strlen(s))
-
 /**
  * Prints out the variables that staments read and write to
  */
@@ -18,9 +17,9 @@ void printReadsAndWrites(igraph_t* graph, long nodeid, Datum* arguments, Datum* 
 
     printf("\n\nOn: %s\n",VAS(graph,"label",nodeid));
 
-    Bitmapset* bms = bms_copy(getIGraphNodeAttrP(graph,"read",nodeid));
+    Bitmapset* bmsRead = bms_copy(getIGraphNodeAttrP(graph,"read",nodeid));
     int dno;
-    while (bms != NULL && !bms_is_empty(bms) && (dno = bms_first_member(bms)) >= 0){
+    while (bmsRead != NULL && !bms_is_empty(bmsRead) && (dno = bms_first_member(bmsRead)) >= 0){
         PLpgSQL_datum *datum = function->datums[dno];
 
         if (datum->dtype == PLPGSQL_DTYPE_VAR)
@@ -30,19 +29,19 @@ void printReadsAndWrites(igraph_t* graph, long nodeid, Datum* arguments, Datum* 
         }
     }
 
-    int* writeDnos = getIGraphNodeAttrP(graph,"write",nodeid);
-    long nwrite  = getIGraphNodeAttrL(graph,"nwrite",nodeid);
 
-    for(int i = 0; i < nwrite; i++)
-    {
 
-        PLpgSQL_datum *datum = function->datums[writeDnos[i]];
+    Bitmapset* bmsWrite = bms_copy(getIGraphNodeAttrP(graph,"write",nodeid));
+    while (bmsWrite != NULL && !bms_is_empty(bmsWrite) && (dno = bms_first_member(bmsWrite)) >= 0){
+        PLpgSQL_datum *datum = function->datums[dno];
+
         if (datum->dtype == PLPGSQL_DTYPE_VAR)
         {
             PLpgSQL_var *var = (PLpgSQL_var *) datum;
             printf("Writing: %s\n",var->refname);
         }
     }
+
 }
 
 

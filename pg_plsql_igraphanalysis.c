@@ -7,6 +7,94 @@
 #include "pg_plsql_graphs.h"
 
 
+
+
+void* setIGraphGlobalAttrP(igraph_t* igraph, const char* name, void* pointer){
+    union dblPointer data;
+    data.pointer = pointer;;
+
+    if(data.doublevalue == data.doublevalue)
+        SETGAN(igraph,name,data.doublevalue);
+    else
+        return NULL;
+}
+
+
+void* getIGraphGlobalAttrP(igraph_t* igraph, const char* name){
+    union dblPointer data;
+    data.doublevalue = GAN(igraph,name);
+
+    if(data.doublevalue == data.doublevalue)/* valid pointer */
+        return data.pointer;
+    else
+        return NULL;
+}
+
+
+
+void* setIGraphGlobalAttrL(igraph_t* igraph, const char* name, long value){
+    union dblPointer data;
+    data.longvalue = value;
+
+    SETGAN(igraph,name,data.doublevalue);
+}
+
+long getIGraphGlobalAttrL(igraph_t* igraph, const char* name){
+    union dblPointer data;
+    data.doublevalue = GAN(igraph,name);
+
+    if(data.doublevalue == data.doublevalue)
+        return data.longvalue;
+    else
+        return 0;
+}
+
+
+
+void* setIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid, void* pointer){
+    union dblPointer data;
+    data.pointer = pointer;
+
+
+    if(data.doublevalue == data.doublevalue)/* valid pointer */
+        SETVAN(igraph,name,nodeid,data.doublevalue);
+    else
+        return NULL;
+}
+
+void* getIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid){
+    union dblPointer data;
+    data.doublevalue = VAN(igraph,name,nodeid);
+
+
+    if(data.doublevalue == data.doublevalue)
+        return data.pointer;
+    else
+        return NULL;
+}
+
+
+void* setIGraphNodeAttrL(igraph_t* igraph, const char* name, long nodeid, long value){
+    union dblPointer data;
+    data.longvalue = value;
+
+
+    SETVAN(igraph,name,nodeid,data.doublevalue);
+}
+
+
+long getIGraphNodeAttrL(igraph_t* igraph, const char* name, long nodeid){
+    union dblPointer data;
+    data.doublevalue = VAN(igraph,name,nodeid);
+
+    if(data.doublevalue == data.doublevalue)
+        return data.longvalue;
+    else
+        return 0;
+}
+
+
+
 /**
  * iterates over the iGraph Nodes and calls a given callback function
  */
@@ -103,12 +191,10 @@ void iterateReachableEdges(igraph_t* graph, void (*callback)(igraph_t*, long, lo
 void addLabels(int nodeid, igraph_t* igraph){
 
 
-    union dblPointer data;
-    data.doublevalue = VAN(igraph,"stmt",nodeid);
-    PLpgSQL_stmt* stmt = data.pointer;
 
-    data.doublevalue = GAN(igraph,"function");
-    PLpgSQL_function* function = data.pointer;
+    PLpgSQL_function* function = getIGraphGlobalAttrP(igraph,"function");
+    PLpgSQL_stmt* stmt = getIGraphNodeAttrP(igraph,"stmt",nodeid);
+
 
     igraph_vector_t eids;
     igraph_vector_init(&eids, 0);
@@ -119,88 +205,102 @@ void addLabels(int nodeid, igraph_t* igraph){
     if(nodeid == 0){
         label = "entry";
     }
-    else if (stmt && stmt->cmd_type == PLPGSQL_STMT_ASSIGN) {
-        PLpgSQL_stmt_assign* assignment  = ((PLpgSQL_stmt_assign*)stmt);
-        PLpgSQL_expr* expr = assignment->expr;
-
-        /* Concat Varibalename with := and the expression */
-        label = concatStrings3(
-                                    varnumberToVarname( assignment->varno,
-                                                        function->datums,
-                                                        function->ndatums),
-                                    " := ",
-                                    expr->query);
-        /* remove the SELECT */
-        label = removeFromString(label,"SELECT ");
-
+    else if(!stmt){
+        label = "unknown";
     }
-    else if (stmt && stmt->cmd_type == PLPGSQL_STMT_RAISE) {
-        label = "RAISE";
-    }
-    else if(stmt && stmt->cmd_type == PLPGSQL_STMT_IF){
-        PLpgSQL_stmt_if* ifStmt  = ((PLpgSQL_stmt_if*)stmt);
+    else{
+        switch (stmt->cmd_type) {
+            case PLPGSQL_STMT_ASSIGN:{
+                PLpgSQL_stmt_assign* assignment  = ((PLpgSQL_stmt_assign*)stmt);
+                PLpgSQL_expr* expr = assignment->expr;
 
-
-
-        /* remove the SELECT of the condinational query */
-        label = removeFromStringN(ifStmt->cond->query,"SELECT ");
-
-        /* label the first edge with 1 */
-        if(igraph_vector_size(&eids) > 0){
-            SETEAS(igraph,"label",VECTOR(eids)[0],"1");
-        }
-        /* and the second with 0 */
-        if(igraph_vector_size(&eids)> 1){
-            SETEAS(igraph,"label",VECTOR(eids)[1],"0");
-        }
-
-    }
-
-    else if(stmt && stmt->cmd_type == PLPGSQL_STMT_WHILE){
-        PLpgSQL_stmt_while* whileStmt  = ((PLpgSQL_stmt_while*)stmt);
-        /* remove the SELECT of the condinational query */
-        label = removeFromStringN(whileStmt->cond->query,"SELECT ");
-
-        /* label the first edge with 1 */
-        if(igraph_vector_size(&eids) > 0){
-            SETEAS(igraph,"label",VECTOR(eids)[0],"1");
-        }
-        /* and the second with 0 */
-        if(igraph_vector_size(&eids)> 1){
-            SETEAS(igraph,"label",VECTOR(eids)[1],"0");
-        }
-
-    }
-    else if (stmt && stmt->cmd_type == PLPGSQL_STMT_RETURN) {
-
-        PLpgSQL_stmt_return* returnStmt  = ((PLpgSQL_stmt_return*)stmt);
-        /* concatinate RETURN with the return query */
-        label = concatStrings2("RETURN ",returnStmt->expr->query);
-
-        /* remove the SELECT */
-        label = removeFromString(label,"SELECT ");
-    }
-    else if(stmt && stmt->cmd_type == PLPGSQL_STMT_EXECSQL) {
-
-        PLpgSQL_stmt_execsql* execSqlStmt  = ((PLpgSQL_stmt_execsql*)stmt);
-
-        label = palloc(100*sizeof(char));
-
-        strcat(label,execSqlStmt->sqlstmt->query);
-        strcat(label," INTO ");
-
-        for(int i=0;i<execSqlStmt->row->nfields;i++){
-            strcat(label,
-                    varnumberToVarname(    execSqlStmt->row->varnos[i],
-                                        function->datums,
-                                        function->ndatums));
-            if(i != execSqlStmt->row->nfields-1){
-                strcat(label,",");
+                /* Concat Varibalename with := and the expression */
+                label = concatStrings3(
+                                            varnumberToVarname( assignment->varno,
+                                                                function->datums,
+                                                                function->ndatums),
+                                            " := ",
+                                            expr->query);
+                /* remove the SELECT */
+                label = removeFromString(label,"SELECT ");
+                break;
             }
+            case PLPGSQL_STMT_RAISE:{
+                label = "RAISE";
+                break;
+            }
+            case PLPGSQL_STMT_IF:{
 
+                PLpgSQL_stmt_if* ifStmt  = ((PLpgSQL_stmt_if*)stmt);
+
+
+
+                /* remove the SELECT of the condinational query */
+                label = removeFromStringN(ifStmt->cond->query,"SELECT ");
+
+                /* label the first edge with 1 */
+                if(igraph_vector_size(&eids) > 0){
+                    SETEAS(igraph,"label",VECTOR(eids)[0],"1");
+                }
+                /* and the second with 0 */
+                if(igraph_vector_size(&eids)> 1){
+                    SETEAS(igraph,"label",VECTOR(eids)[1],"0");
+                }
+                break;
+            }
+            case PLPGSQL_STMT_WHILE:{
+                PLpgSQL_stmt_while* whileStmt  = ((PLpgSQL_stmt_while*)stmt);
+                /* remove the SELECT of the condinational query */
+                label = removeFromStringN(whileStmt->cond->query,"SELECT ");
+
+                /* label the first edge with 1 */
+                if(igraph_vector_size(&eids) > 0){
+                    SETEAS(igraph,"label",VECTOR(eids)[0],"1");
+                }
+                /* and the second with 0 */
+                if(igraph_vector_size(&eids)> 1){
+                    SETEAS(igraph,"label",VECTOR(eids)[1],"0");
+                }
+                break;
+            }
+            case PLPGSQL_STMT_RETURN:{
+
+                PLpgSQL_stmt_return* returnStmt  = ((PLpgSQL_stmt_return*)stmt);
+                /* concatinate RETURN with the return query */
+                label = concatStrings2("RETURN ",returnStmt->expr->query);
+
+                /* remove the SELECT */
+                label = removeFromString(label,"SELECT ");
+                break;
+            }
+            case PLPGSQL_STMT_EXECSQL:{
+                PLpgSQL_stmt_execsql* execSqlStmt  = ((PLpgSQL_stmt_execsql*)stmt);
+
+                label = palloc(100*sizeof(char));
+
+                strcat(label,execSqlStmt->sqlstmt->query);
+                strcat(label," INTO ");
+
+                for(int i=0;i<execSqlStmt->row->nfields;i++){
+                    strcat(label,
+                            varnumberToVarname(    execSqlStmt->row->varnos[i],
+                                                function->datums,
+                                                function->ndatums));
+                    if(i != execSqlStmt->row->nfields-1){
+                        strcat(label,",");
+                    }
+
+                }
+                break;
+            }
+            default:{
+                /* unsupported command */
+                label = "unknown";
+                break;
+           }
         }
-
     }
+
     if(label){
         /* set the label of the current node as attribute  */
         /* to the corresponding node of the igraph */
@@ -234,254 +334,203 @@ Bitmapset* getParametersOfQueryExpr(PLpgSQL_expr*         expr,
  */
 void setReadsAndWrites(int nodeid, igraph_t* igraph){
 
-    union dblPointer data;
-    data.doublevalue = VAN(igraph,"stmt",nodeid);
+    if(nodeid == 0)
+        return;
 
-    if(nodeid != 0){
-        PLpgSQL_stmt* stmt = data.pointer;
+    PLpgSQL_function* function = getIGraphGlobalAttrP(igraph,"function");
+    PLpgSQL_execstate* estate = getIGraphGlobalAttrP(igraph,"estate");
+    PLpgSQL_stmt* stmt = getIGraphNodeAttrP(igraph,"stmt",nodeid);
 
+    /* switch statement type */
+    if(stmt && stmt->cmd_type){
+        switch (stmt->cmd_type) {
+            case PLPGSQL_STMT_ASSIGN:{
+                PLpgSQL_stmt_assign* assignment  = ((PLpgSQL_stmt_assign*)stmt);
 
-        data.doublevalue = GAN(igraph,"function");
-        PLpgSQL_function* function = data.pointer;
+                /* Set the wites variables of the statement to the variable the assignment writes */
+                setIGraphNodeAttrP(igraph,"write",nodeid,bms_make_singleton(assignment->varno));
 
+                /* Get the parameters of the query of the assignment. Those are our read variables */
+                Bitmapset* bms = bms_copy(getParametersOfQueryExpr( assignment->expr,
+                                                                    function,
+                                                                    estate));
+                /* Set the read variables of the statement */
+                setIGraphNodeAttrP(igraph,"read",nodeid,bms);
+                break;
+            }
+            case PLPGSQL_STMT_RAISE:{
+                break;
+            }
+            case PLPGSQL_STMT_IF:{
+                PLpgSQL_stmt_if* ifStmt  = ((PLpgSQL_stmt_if*)stmt);
 
-        data.doublevalue = GAN(igraph,"estate");
-        PLpgSQL_execstate* estate = data.pointer;
-
-
-        union dblPointer writeData;
-        writeData.longvalue = 0;
-
-        if (stmt && stmt->cmd_type && stmt->cmd_type == PLPGSQL_STMT_ASSIGN) {
-            PLpgSQL_stmt_assign* assignment  = ((PLpgSQL_stmt_assign*)stmt);
-
-            int* intPointer = &assignment->varno;
-
-            writeData.pointer = intPointer;
-            SETVAN(igraph,"write",nodeid,writeData.doublevalue);
-            writeData.longvalue = 1;
-            SETVAN(igraph,"nwrite",nodeid,writeData.doublevalue);
-
-            data.pointer = bms_copy(getParametersOfQueryExpr(    assignment->expr,
-                                                                function,
-                                                                estate));
-            SETVAN(igraph,"read",nodeid,data.doublevalue);
-        }
-        else if (stmt && stmt->cmd_type == PLPGSQL_STMT_RAISE) {
-        }
-        else if(stmt && stmt->cmd_type == PLPGSQL_STMT_IF){
-            PLpgSQL_stmt_if* ifStmt  = ((PLpgSQL_stmt_if*)stmt);
-
-            data.pointer = bms_copy(getParametersOfQueryExpr(ifStmt->cond,function,estate));
-            SETVAN(igraph,"read",nodeid,data.doublevalue);
-
-
-        }
-        else if(stmt && stmt->cmd_type == PLPGSQL_STMT_WHILE){
-            PLpgSQL_stmt_while* whileStmt  = ((PLpgSQL_stmt_while*)stmt);
+                /* Get the parameters of the query of the if statement. Those are our read variables */
+                Bitmapset* bms = bms_copy(getParametersOfQueryExpr( ifStmt->cond,
+                                                                    function,
+                                                                    estate));
+                 /* Set the read variables of the statement */
+                setIGraphNodeAttrP(igraph,"read",nodeid,bms);
+                break;
+            }
+            case PLPGSQL_STMT_WHILE:{
+                PLpgSQL_stmt_while* whileStmt  = ((PLpgSQL_stmt_while*)stmt);
 
 
-            data.pointer = bms_copy(getParametersOfQueryExpr(    whileStmt->cond,
-                                                                function,
-                                                                estate));
-            SETVAN(igraph,"read",nodeid,data.doublevalue);
-        }
-        else if (stmt && stmt->cmd_type == PLPGSQL_STMT_RETURN) {
+                /* Get the parameters of the query of the while statement. Those are our read variables */
+                Bitmapset* bms = bms_copy(getParametersOfQueryExpr( whileStmt->cond,
+                                                                    function,
+                                                                    estate));
+                /* Set the read variables of the statement */
+               setIGraphNodeAttrP(igraph,"read",nodeid,bms);
+                break;
+            }
+            case PLPGSQL_STMT_RETURN:{
+                PLpgSQL_stmt_return* returnStmt  = ((PLpgSQL_stmt_return*)stmt);
 
-            PLpgSQL_stmt_return* returnStmt  = ((PLpgSQL_stmt_return*)stmt);
+                /* Get the parameters of the query of the return statement. Those are our read variables */
+                Bitmapset* bms = bms_copy(getParametersOfQueryExpr( returnStmt->expr,
+                                                                    function,
+                                                                    estate));
+                /* Set the read variables of the statement */
+                setIGraphNodeAttrP(igraph,"read",nodeid,bms);
+                break;
+            }
+            case PLPGSQL_STMT_EXECSQL:{
+
+                PLpgSQL_stmt_execsql* execSqlStmt  = ((PLpgSQL_stmt_execsql*)stmt);
 
 
-            data.pointer = bms_copy(getParametersOfQueryExpr(    returnStmt->expr,
-                                                                function,
-                                                                estate));
-            SETVAN(igraph,"read",nodeid,data.doublevalue);
-        }
+                Bitmapset* bmsWrite = palloc(sizeof(Bitmapset));
+                for(int i=0;i<execSqlStmt->row->nfields;i++){
+                    bms_add_member(bmsWrite,execSqlStmt->row->varnos[i]);
+                }
 
-        else if(stmt && stmt->cmd_type == PLPGSQL_STMT_EXECSQL) {
-
-            PLpgSQL_stmt_execsql* execSqlStmt  = ((PLpgSQL_stmt_execsql*)stmt);
+                /* get the variables the exec stmt writes to and set them as our write variables */
+               setIGraphNodeAttrP(igraph,"write",nodeid,bmsWrite);
 
 
-            data.pointer = bms_copy(getParametersOfQueryExpr(    execSqlStmt->sqlstmt,
-                                                                function,
-                                                                estate));
-            SETVAN(igraph,"read",nodeid,data.doublevalue);
+                /* Get the parameters of the query of the sql statement. Those are our read variables */
+                Bitmapset* bmsRead = bms_copy(getParametersOfQueryExpr( execSqlStmt->sqlstmt,
+                                                                    function,
+                                                                    estate));
+                /* Set the read variables of the statement */
+                setIGraphNodeAttrP(igraph,"read",nodeid,bmsRead);
 
-            writeData.pointer = execSqlStmt->row->varnos;
-            SETVAN(igraph,"write",nodeid,writeData.doublevalue);
-            writeData.longvalue = execSqlStmt->row->nfields;
-            SETVAN(igraph,"nwrite",nodeid,writeData.doublevalue);
 
+                break;
+            }
+            default:
+                break;
         }
     }
 
+
 }
 
 
-void* getIGraphGlobalAttrP(igraph_t* igraph, const char* name){
-    union dblPointer data;
-    data.doublevalue = GAN(igraph,name);
+bool containsSameVariable(Bitmapset* bms1,Bitmapset* bms2,PLpgSQL_function* function){
 
-    if(data.doublevalue == data.doublevalue)
-        return data.pointer;
-    else
-        return NULL;
-}
-
-long getIGraphGlobalAttrL(igraph_t* igraph, const char* name){
-    union dblPointer data;
-    data.doublevalue = GAN(igraph,name);
-
-    if(data.doublevalue == data.doublevalue)
-        return data.longvalue;
-    else
+    if(bms1 == NULL || bms2 == NULL){
         return 0;
+    }
+
+    /* create the intersection of the two bitmapsets */
+    Bitmapset* intersection = bms_intersect(bms1,bms2);
+
+    /* iterate them */
+    int dno;
+    while (intersection != NULL &&  !bms_is_empty(intersection) && (dno = bms_first_member(intersection)) >= 0){
+        /* if the intersection has a dno of type PLPGSQL_DTYPE_VAR bms1 and bms2 contain the same variable */
+        if(function->datums[dno]->dtype == PLPGSQL_DTYPE_VAR)
+            return 1;
+    }
+    return 0;
 }
 
 
-
-void* getIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid){
-    union dblPointer data;
-    data.doublevalue = VAN(igraph,name,nodeid);
-
-
-    if(data.doublevalue == data.doublevalue)
-        return data.pointer;
-    else
-        return NULL;
-}
-
-
-
-
-long getIGraphNodeAttrL(igraph_t* igraph, const char* name, long nodeid){
-    union dblPointer data;
-    data.doublevalue = VAN(igraph,name,nodeid);
-
-    if(data.doublevalue == data.doublevalue)
-        return data.longvalue;
-    else
-        return 0;
-}
-
-
-
+/**
+ * Add WR, RW and WW dependence edges to the reachable nodes of the current node and therefore create a program depence graph
+ */
 void createProgramDependenceGraph(igraph_t* igraph, long nodeid, Datum* argument, Datum* result, bool lastElem){
 
 
     PLpgSQL_function* function = getIGraphGlobalAttrP(igraph,"function");
     PLpgSQL_stmt* stmt = getIGraphNodeAttrP(igraph,"stmt",nodeid);
-    int* writeDnos = getIGraphNodeAttrP(igraph,"write",nodeid);
-    long nwriteDnos = getIGraphNodeAttrL(igraph,"nwrite",nodeid);
+    Bitmapset* writeBms1 = getIGraphNodeAttrP(igraph,"write",nodeid);
+    Bitmapset* readBms1 = getIGraphNodeAttrP(igraph,"read",nodeid);
 
-    if(writeDnos != NULL){
-
-        igraph_vector_t order;
-        igraph_vector_init(&order, 0);
-
-        igraph_dfs(igraph, /*root=*/nodeid, /*neimode=*/IGRAPH_OUT,
-                /*unreachable=*/0, &order, 0, 0, 0, 0, 0,0);
+    if(nodeid == 0 || (writeBms1 == NULL && readBms1 == NULL)){
+        return;
+    }
 
 
+    igraph_vector_t order;
+    igraph_vector_init(&order, 0);
 
-
-        for(int i=0;i<igraph_vector_size(&order);i++){
-            unsigned int vid = VECTOR(order)[i];
-
-            if(vid && nodeid != vid){
-                Bitmapset* bmsN = bms_copy(getIGraphNodeAttrP(igraph,"read",vid));
-
-                int dno;
-                while (!bms_is_empty(bmsN) && (dno = bms_first_member(bmsN)) >= 0){
-                    PLpgSQL_datum *datum = function->datums[dno];
-
-                    if (datum->dtype == PLPGSQL_DTYPE_VAR){
+    igraph_dfs(igraph, /*root=*/nodeid, /*neimode=*/IGRAPH_OUT,
+            /*unreachable=*/0, &order, 0, 0, 0, 0, 0,0);
 
 
 
-                        for(int j = 0; j < nwriteDnos; j++){
+    /* iterate over reachable edges of the current node */
+    for(int i=0;order.stor_begin != NULL && i<igraph_vector_size(&order);i++){
+        /* current vertex id */
+        unsigned int vid = VECTOR(order)[i];
 
-                            if(dno == writeDnos[j]){
+        if(nodeid != vid){
+            Bitmapset* readBms2 = getIGraphNodeAttrP(igraph,"read",vid);
+            Bitmapset* writeBms2 = getIGraphNodeAttrP(igraph,"write",vid);
 
-                                /* read -> write dependency, add edge */
+            if(containsSameVariable(writeBms1,readBms2,function)){
 
-                                /* Add edges to the graph */
-                                igraph_add_edge(igraph,nodeid,vid);
+                /* read -> write dependency, add edge */
 
-                                igraph_integer_t eid;
-                                igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
+                /* Add edge to the graph */
+                igraph_add_edge(igraph,nodeid,vid);
+                igraph_integer_t eid;
+                igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
 
-                                SETEAS(igraph,"type",eid,"WR-DEPENDENCE");
-                            }
-                        }
-
-
-                    }
-                }
-
-
-
-                int* writeDnos2 = getIGraphNodeAttrP(igraph,"write",vid);
-                long nwriteDnos2 = getIGraphNodeAttrL(igraph,"nwrite",vid);
-
-                if(writeDnos2 != NULL){
-                    for(int j = 0; j < nwriteDnos; j++){
-
-
-                        for(int k = 0; k < nwriteDnos2; k++){
-                            /* write -> write dependency, add edge */
-                            /* Add edges to the graph */
-
-                            if(writeDnos[j] == writeDnos2[k]){
-                                igraph_add_edge(igraph,nodeid,vid);
-
-                                igraph_integer_t eid;
-                                igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
-
-                                SETEAS(igraph,"type",eid,"WW-DEPENDENCE");
-                            }
-
-                        }
-                    }
-
-
-                    Bitmapset* bms = bms_copy(getIGraphNodeAttrP(igraph,"read",nodeid));
-                    int dno;
-                    while (!bms_is_empty(bms) && (dno = bms_first_member(bms)) >= 0){
-                        PLpgSQL_datum *datum = function->datums[dno];
-
-                        if (datum->dtype == PLPGSQL_DTYPE_VAR){
-
-
-                            for(int j = 0; j < nwriteDnos2; j++){
-
-
-                                if(writeDnos2[j] == dno){
-                                    /* write -> read dependency, add edge */
-
-                                    /* Add edges to the graph */
-                                    igraph_add_edge(igraph,nodeid,vid);
-
-                                    igraph_integer_t eid;
-                                    igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
-
-                                    SETEAS(igraph,"type",eid,"RW-DEPENDENCE");
-                                }
-                            }
-
-                        }
-                    }
-                }
-
-
+                SETEAS(igraph,"type",eid,"WR-DEPENDENCE");
             }
+
+
+            if(containsSameVariable(writeBms1,writeBms2,function)){
+
+                /* write -> write dependency, add edge */
+
+                /* Add edge to the graph */
+                igraph_add_edge(igraph,nodeid,vid);
+                igraph_integer_t eid;
+                igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
+
+                SETEAS(igraph,"type",eid,"WW-DEPENDENCE");
+            }
+
+
+            if(containsSameVariable(readBms1,writeBms2,function)){
+
+                /* write -> read dependency, add edge */
+
+                /* Add edge to the graph */
+                igraph_add_edge(igraph,nodeid,vid);
+                igraph_integer_t eid;
+                igraph_get_eid(igraph, &eid,nodeid,vid,1,0);
+
+                SETEAS(igraph,"type",eid,"RW-DEPENDENCE");
+            }
+
+
+
 
 
         }
 
-        igraph_vector_destroy(&order);
+
+
+
 
     }
+    igraph_vector_destroy(&order);
 
 }
 
