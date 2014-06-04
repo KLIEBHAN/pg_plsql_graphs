@@ -400,13 +400,10 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
                 PLpgSQL_stmt_execsql* execSqlStmt  = ((PLpgSQL_stmt_execsql*)stmt);
 
 
-                Bitmapset* bmsWrite = palloc(sizeof(Bitmapset));
-                for(int i=0;i<execSqlStmt->row->nfields;i++){
-                    bms_add_member(bmsWrite,execSqlStmt->row->varnos[i]);
-                }
 
-                /* get the variables the exec stmt writes to and set them as our write variables */
-               setIGraphNodeAttrP(igraph,"write",nodeid,bmsWrite);
+                /* get the variables the exec stmt writes as Bitmapset and set them as our write variables */
+                Bitmapset* bmsWrite = intArrayToBitmapSet(execSqlStmt->row->varnos,execSqlStmt->row->nfields);
+                setIGraphNodeAttrP(igraph,"write",nodeid,bmsWrite);
 
 
                 /* Get the parameters of the query of the sql statement. Those are our read variables */

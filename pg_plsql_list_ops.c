@@ -16,3 +16,12 @@ List* copy_list(List* parents){
     }
     return newList;
 }
+
+
+Bitmapset* intArrayToBitmapSet(int* array, int size){
+    Bitmapset* bms = palloc(sizeof(Bitmapset));
+    for(int i=0;i<size;i++){
+        bms_add_member(&bms,array[i]);
+    }
+    return bms;
+}

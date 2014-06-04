@@ -123,6 +123,7 @@ long getIGraphNodeAttrL(igraph_t* igraph, const char* name, long nodeid);
  * ----------
  */
 List* copy_list(List* parents);
+Bitmapset* intArrayToBitmapSet(int* array, int size);
 
 /* ----------
  * Functions in pg_plsql_string_ops.c
