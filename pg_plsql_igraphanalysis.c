@@ -24,6 +24,11 @@ void addLabels(int nodeid, igraph_t* igraph){
     igraph_vector_init(&eids, 0);
     igraph_incident(igraph, &eids, nodeid, IGRAPH_OUT);
 
+    /* Init edges labels to blank */
+    for(int i=0;i<igraph_vector_size(&eids);i++){
+        setIGraphEdgeAttrS(igraph,"label",VECTOR(eids)[i],"");
+    }
+
     char* label = NULL;
 
     if(nodeid == 0){
@@ -38,13 +43,16 @@ void addLabels(int nodeid, igraph_t* igraph){
                 PLpgSQL_stmt_assign* assignment  = ((PLpgSQL_stmt_assign*)stmt);
                 PLpgSQL_expr* expr = assignment->expr;
 
-                /* Concat Varibalename with := and the expression */
-                label = concatStrings3(
-                                            varnumberToVarname( assignment->varno,
-                                                                function->datums,
-                                                                function->ndatums),
-                                            " := ",
-                                            expr->query);
+
+
+                label = palloc(100*sizeof(char));
+                sprintf(eos(label),"%s := %s",
+                        varnumberToVarname( assignment->varno,
+                                            function->datums,
+                                            function->ndatums),
+                        expr->query);
+
+
                 /* remove the SELECT */
                 label = removeFromString(label,"SELECT ");
                 break;
@@ -87,11 +95,59 @@ void addLabels(int nodeid, igraph_t* igraph){
                 }
                 break;
             }
+            case PLPGSQL_STMT_FORI:{
+                PLpgSQL_stmt_fori* foriStmt  = ((PLpgSQL_stmt_fori*)stmt);
+
+                label = palloc(200*sizeof(char));
+                sprintf(eos(label),"FOR %s in %s..%s",
+                        foriStmt->var->refname,
+                        removeFromStringN(foriStmt->lower->query,"SELECT"),
+                        removeFromStringN(foriStmt->upper->query,"SELECT"));
+
+                if(foriStmt->step)
+                    sprintf(eos(label)," by %s",removeFromStringN(foriStmt->step->query,"SELECT"));
+
+
+
+                /* label the first edge with 1 */
+                if(igraph_vector_size(&eids) > 0){
+                    setIGraphEdgeAttrS(igraph,"label",VECTOR(eids)[0],"1");
+                }
+                /* and the second with 0 */
+                if(igraph_vector_size(&eids)> 1){
+                    setIGraphEdgeAttrS(igraph,"label",VECTOR(eids)[1],"0");
+                }
+
+                break;
+            }
+            case PLPGSQL_STMT_FORS:{
+                PLpgSQL_stmt_fors* forsStmt  = ((PLpgSQL_stmt_fors*)stmt);
+
+                label = palloc(200*sizeof(char));
+                sprintf(eos(label),"FOR %s IN %s",
+                        forsStmt->rec->refname,
+                        forsStmt->query->query);
+
+
+
+                /* label the first edge with 1 */
+                if(igraph_vector_size(&eids) > 0){
+                    setIGraphEdgeAttrS(igraph,"label",VECTOR(eids)[0],"1");
+                }
+                /* and the second with 0 */
+                if(igraph_vector_size(&eids)> 1){
+                    setIGraphEdgeAttrS(igraph,"label",VECTOR(eids)[1],"0");
+                }
+
+                break;
+            }
             case PLPGSQL_STMT_RETURN:{
 
                 PLpgSQL_stmt_return* returnStmt  = ((PLpgSQL_stmt_return*)stmt);
                 /* concatinate RETURN with the return query */
-                label = concatStrings2("RETURN ",returnStmt->expr->query);
+                label = palloc(128*sizeof(char));
+
+                sprintf(eos(label),"RETURN %s ",returnStmt->expr->query);
 
                 /* remove the SELECT */
                 label = removeFromString(label,"SELECT ");
@@ -100,18 +156,18 @@ void addLabels(int nodeid, igraph_t* igraph){
             case PLPGSQL_STMT_EXECSQL:{
                 PLpgSQL_stmt_execsql* execSqlStmt  = ((PLpgSQL_stmt_execsql*)stmt);
 
-                label = palloc(100*sizeof(char));
+                label = palloc(128*sizeof(char));
 
-                strcat(label,execSqlStmt->sqlstmt->query);
-                strcat(label," INTO ");
+                sprintf(eos(label),"%s INTO ",execSqlStmt->sqlstmt->query);
 
                 for(int i=0;i<execSqlStmt->row->nfields;i++){
-                    strcat(label,
-                            varnumberToVarname(    execSqlStmt->row->varnos[i],
-                                                function->datums,
-                                                function->ndatums));
+
+                    sprintf(eos(label),"%s",varnumberToVarname( execSqlStmt->row->varnos[i],
+                                                                function->datums,
+                                                                function->ndatums)  );
+
                     if(i != execSqlStmt->row->nfields-1){
-                        strcat(label,",");
+                        sprintf(eos(label),",");
                     }
 
                 }
@@ -188,6 +244,53 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
                                                                     estate));
                 /* Set the read variables of the statement */
                setIGraphNodeAttrP(igraph,"read",nodeid,bms);
+                break;
+            }
+            case PLPGSQL_STMT_FORI:{
+
+                PLpgSQL_stmt_fori* foriStmt  = ((PLpgSQL_stmt_fori*)stmt);
+
+
+                //TODO different types of for loops
+
+                /* Get the parameters of the query of the while statement. Those are our read variables */
+                Bitmapset* bms = NULL;
+
+
+                if(foriStmt->lower != NULL)
+                    bms = bms_union(bms,getParametersOfQueryExpr( foriStmt->lower,
+                                                                        function,
+                                                                        estate));
+                if(foriStmt->upper != NULL)
+                    bms = bms_union(bms,getParametersOfQueryExpr( foriStmt->upper,
+                                                                        function,
+                                                                        estate));
+
+                if(foriStmt->step != NULL)
+                    bms = bms_union(bms,getParametersOfQueryExpr( foriStmt->step,
+                                                                    function,
+                                                                    estate));
+
+                if(foriStmt->var->dtype != PLPGSQL_DTYPE_VAR)
+                    bms_add_member(bms,foriStmt->var->dno);
+
+                /* Set the read variables of the statement */
+                setIGraphNodeAttrP(igraph,"read",nodeid,bms);
+                break;
+            }
+            case PLPGSQL_STMT_FORS:{
+                PLpgSQL_stmt_fors* forsStmt  = ((PLpgSQL_stmt_fors*)stmt);
+
+                /* Get the parameters of the query of the return statement. Those are our read variables */
+                Bitmapset* bms = bms_copy(getParametersOfQueryExpr( forsStmt->query,
+                                                                    function,
+                                                                    estate));
+
+
+                /* Set the read variables of the statement */
+                setIGraphNodeAttrP(igraph,"read",nodeid,bms);
+
+
                 break;
             }
             case PLPGSQL_STMT_RETURN:{

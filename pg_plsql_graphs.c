@@ -46,6 +46,54 @@
 PG_MODULE_MAGIC;
 
 
+/*
+ * Shared state
+ */
+typedef struct pgpgSharedState
+{
+    LWLock*            lock;            /* protects hashtable search/modification */
+    PLpgSQL_plugin* plugin;            /* PlpgSQL_pluging struct */
+    int         counter;            /* counter for ids */
+
+} pgpgSharedState;
+
+
+/*
+ * Hashtable key that defines the identity of a hashtable entry.  We separate
+ * entries by user, database and a function id. Also every entey has a unique id.
+ */
+typedef struct pgpgHashKey
+{
+    Oid            userid;            /* user OID */
+    Oid            dbid;            /* database OID */
+    Oid            functionid;        /* function OID */
+    long        uniqueid;        /* unique ID */
+
+} pgpgHashKey;
+
+/*
+ * Dot dependency graphs to plpgsql functions
+ */
+typedef struct DotStruct
+{
+    int64        id;
+    char        functionName[255];
+    char        flowGraphDot[MAXDOTFILESIZE];
+    char        programDepencenceGraphDot[MAXDOTFILESIZE];
+} DotStruct;
+
+
+
+/*
+ * Statistics per statement
+ */
+typedef struct pgpgEntry
+{
+    pgpgHashKey key;            /* hash key of entry - MUST BE FIRST */
+    DotStruct    dotStruct;        /* the dotfiles for this function */
+    slock_t        mutex;            /* protects the dotStruct only */
+} pgpgEntry;
+
 
 Datum        pg_plsql_graphs(PG_FUNCTION_ARGS);
 void        _PG_init(void);
@@ -211,8 +259,6 @@ static void pgpg_shmem_startup(){
  * Function hook before the execution of function
  */
 static void pgpg_func_beg(PLpgSQL_execstate *estate, PLpgSQL_function *func){
-    /* creates a graph for the current function */
-    createGraph(func,estate);
 }
 
 
@@ -220,6 +266,8 @@ static void pgpg_func_beg(PLpgSQL_execstate *estate, PLpgSQL_function *func){
  * Function hook after the execution of function
  */
 static void pgpg_func_end(PLpgSQL_execstate *estate, PLpgSQL_function *func){
+    /* creates a graph for the current function */
+    createGraph(func,estate);
 }
 
 /**
@@ -296,6 +344,7 @@ void createGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
     /* Dot sources were copied to shared memory so we can free them */
     pfree(programDepenceGraphDot);
     pfree(flowGraphDot);
+
 
 }
 

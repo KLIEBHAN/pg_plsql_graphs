@@ -17,54 +17,7 @@
 
 #define MAXDOTFILESIZE 4096
 
-
-/*
- * Shared state
- */
-typedef struct pgpgSharedState
-{
-    LWLock*            lock;            /* protects hashtable search/modification */
-    PLpgSQL_plugin* plugin;            /* PlpgSQL_pluging struct */
-    int         counter;            /* counter for ids */
-
-} pgpgSharedState;
-
-
-/*
- * Hashtable key that defines the identity of a hashtable entry.  We separate
- * entries by user, database and a function id. Also every entey has a unique id.
- */
-typedef struct pgpgHashKey
-{
-    Oid            userid;            /* user OID */
-    Oid            dbid;            /* database OID */
-    Oid            functionid;        /* function OID */
-    long        uniqueid;        /* unique ID */
-
-} pgpgHashKey;
-
-/*
- * Dot dependency graphs to plpgsql functions
- */
-typedef struct DotStruct
-{
-    int64        id;
-    char        functionName[255];
-    char        flowGraphDot[MAXDOTFILESIZE];
-    char        programDepencenceGraphDot[MAXDOTFILESIZE];
-} DotStruct;
-
-
-
-/*
- * Statistics per statement
- */
-typedef struct pgpgEntry
-{
-    pgpgHashKey key;            /* hash key of entry - MUST BE FIRST */
-    DotStruct    dotStruct;        /* the dotfiles for this function */
-    slock_t        mutex;            /* protects the dotStruct only */
-} pgpgEntry;
+#define eos(s) ((s)+strlen(s))
 
 
 /**
@@ -146,7 +99,7 @@ igraph_t* buildIGraph(List* nodes,PLpgSQL_function* function,PLpgSQL_execstate *
  * Functions in pg_plsql_igraph_export.c
  * ----------
  */
-void printReadsAndWrites(igraph_t* graph, long nodeid, Datum* arguments, Datum* result);
+void printReadsAndWrites(igraph_t* graph, long nodeid, Datum* arguments, Datum* result, bool breakIfFound);
 char* convertGraphToDotFormat(  igraph_t* graph,
                                 List* edgeTypes,
                                 bool edgeLabels,
@@ -207,8 +160,6 @@ Bitmapset* intArrayToBitmapSet(int* array, int size);
  * ----------
  */
 void removeSubstring(char *s,const char *toremove);
-char* concatStrings2(char* str1, char* str2);
-char* concatStrings3(char* str1, char* str2, char* str3);
 char* removeFromString(char* string,char* toRemove);
 char* removeFromStringN(const char* string,char* toRemove);
 

@@ -105,6 +105,54 @@ void createProgramGraph(int* newnodeid,
                 /* parents for upcoming statements are the parents after the while node */
                 status->parents = parentsAfterWhile;
                 break;
+            case PLPGSQL_STMT_FORI:{
+                /* Append the while statement an connect it to the parents */
+                appendNewNodeAndConnectParents(newnodeid,status,stmt);
+
+                /* Parents after the fori node */
+                List* parentsAfterWhile = copy_list(status->parents);
+
+                /* remember the fori node id */
+                int whileNodeId = *newnodeid;
+
+                /* Progress the statements in the loop */
+                createProgramGraph( newnodeid,
+                                    status,
+                                    ((PLpgSQL_stmt_fori*)stmt)->body,
+                                    function);
+
+                /* connect the fori node id to the parents after the last fori node */
+                connectNodeToParents(whileNodeId,status->parents);
+
+                /* parents for upcoming statements are the parents after the fori node */
+                status->parents = parentsAfterWhile;
+
+                break;
+            }
+            case PLPGSQL_STMT_FORS:{
+                /* Append the while statement an connect it to the parents */
+                appendNewNodeAndConnectParents(newnodeid,status,stmt);
+
+                /* Parents after the fori node */
+                List* parentsAfterWhile = copy_list(status->parents);
+
+                /* remember the fori node id */
+                int whileNodeId = *newnodeid;
+
+                /* Progress the statements in the loop */
+                createProgramGraph( newnodeid,
+                                    status,
+                                    ((PLpgSQL_stmt_fors*)stmt)->body,
+                                    function);
+
+                /* connect the fori node id to the parents after the last fori node */
+                connectNodeToParents(whileNodeId,status->parents);
+
+                /* parents for upcoming statements are the parents after the fori node */
+                status->parents = parentsAfterWhile;
+
+                break;
+            }
             case PLPGSQL_STMT_IF:
 
                 /* Append the if node and connect it to the parents */
@@ -180,13 +228,8 @@ igraph_t* buildIGraph(List* nodes,
 
     igraph_empty(graph,nodes->length,1);
 
-    union dblPointer data;
-    data.pointer = function;
-    SETGAN(graph,"function",data.doublevalue);
-
-    data.pointer = estate;
-    SETGAN(graph,"estate",data.doublevalue);
-
+    setIGraphGlobalAttrP(graph,"function",function);
+    setIGraphGlobalAttrP(graph,"estate",estate);
 
     ListCell* node;
     /* iterate over nodes */
@@ -194,11 +237,7 @@ igraph_t* buildIGraph(List* nodes,
         struct node* no = lfirst(node);
 
 
-        union dblPointer data;
-        data.pointer = no->stmt;
-
-        SETVAN(graph,"stmt",no->key,data.doublevalue);
-
+        setIGraphNodeAttrP(graph,"stmt",no->key,no->stmt);
 
         setReadsAndWrites(no->key,graph);
 
@@ -237,6 +276,8 @@ igraph_t* buildIGraph(List* nodes,
 }
 
 igraph_t* createFlowGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
+    /* ignore errors */
+    igraph_set_error_handler(igraph_error_handler_printignore);
 
     int newnodeid = 0;
     struct graph_status* status  = initStatus(newnodeid);

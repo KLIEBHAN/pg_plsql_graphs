@@ -6,11 +6,10 @@
 #include <igraph/igraph.h>
 #include "pg_plsql_graphs.h"
 #include "storage/fd.h"
-#define eos(s) ((s)+strlen(s))
 /**
  * Prints out the variables that staments read and write to
  */
-void printReadsAndWrites(igraph_t* graph, long nodeid, Datum* arguments, Datum* result){
+void printReadsAndWrites(igraph_t* graph, long nodeid, Datum* arguments, Datum* result, bool breakIfFound){
 
 
     PLpgSQL_function* function = getIGraphGlobalAttrP(graph,"function");
@@ -85,7 +84,12 @@ void appendEdgeToDot(igraph_t* graph, long eid, long from, long to, Datum* argum
             sprintf(eos(buf),"[penwidth=0.4]");
             /* if show labes attribute is set -> add them */
             if(showLabels){
-                sprintf(eos(buf),"[label=\"\%s\"]",getIGraphEdgeAttrS(graph,"label",eid));
+
+                const char* label = getIGraphEdgeAttrS(graph,"label",eid);
+
+                if(label != NULL){
+                    sprintf(eos(buf),"[label=\"\%s\"]",label);
+                }
             }
             /* add the color */
             sprintf(eos(buf),"[color=%s]",lsecond(edgeData));
