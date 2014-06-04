@@ -78,14 +78,14 @@ void appendEdgeToDot(igraph_t* graph, long eid, long from, long to, Datum* argum
         List* edgeData = lfirst(cell);
 
         /* of the edge has the current edge type type append the dot data */
-        if(strcmp(EAS(graph,"type",eid),linitial(edgeData)) == 0){
+        if(strcmp(getIGraphEdgeAttrS(graph,"type",eid),linitial(edgeData)) == 0){
             /* add edge */
             sprintf(eos(buf),"%li -> %li",from,to);
             /* penwidth */
             sprintf(eos(buf),"[penwidth=0.4]");
             /* if show labes attribute is set -> add them */
             if(showLabels){
-                sprintf(eos(buf),"[label=\"\%s\"]",EAS(graph,"label",eid));
+                sprintf(eos(buf),"[label=\"\%s\"]",getIGraphEdgeAttrS(graph,"label",eid));
             }
             /* add the color */
             sprintf(eos(buf),"[color=%s]",lsecond(edgeData));

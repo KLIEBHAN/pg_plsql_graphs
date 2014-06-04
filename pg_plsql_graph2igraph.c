@@ -64,7 +64,7 @@ igraph_t* buildIGraph(List* nodes,
                            1,
                            0);
 
-            SETEAS(graph,"type",eid,"FLOW");
+            setIGraphEdgeAttrS(graph,"type",eid,"FLOW");
 
         }
 

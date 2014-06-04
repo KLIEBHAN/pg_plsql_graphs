@@ -50,6 +50,15 @@ long getIGraphGlobalAttrL(igraph_t* igraph, const char* name){
 }
 
 
+void* setIGraphGlobalAttrS(igraph_t* igraph, const char* name, char* value){
+
+    SETGAS(igraph,name,value);
+}
+
+char* getIGraphGlobalAttrS(igraph_t* igraph, const char* name){
+    return GAS(igraph,name);
+}
+
 
 void* setIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid, void* pointer){
     union dblPointer data;
@@ -91,6 +100,26 @@ long getIGraphNodeAttrL(igraph_t* igraph, const char* name, long nodeid){
         return data.longvalue;
     else
         return 0;
+}
+
+
+void* setIGraphNodeAttrS(igraph_t* igraph, const char* name, long nodeid, char* string){
+    SETVAS(igraph,name,nodeid,string);
+}
+
+
+long getIGraphNodeAttrS(igraph_t* igraph, const char* name, long nodeid){
+    return VAS(igraph,name,nodeid);
+}
+
+
+void* setIGraphEdgeAttrS(igraph_t* igraph, const char* name, long edgeid, char* string){
+    SETEAS(igraph,name,edgeid,string);
+}
+
+
+long getIGraphEdgeAttrS(igraph_t* igraph, const char* name, long edgeid){
+    return EAS(igraph,name,edgeid);
 }
 
 
@@ -240,11 +269,11 @@ void addLabels(int nodeid, igraph_t* igraph){
 
                 /* label the first edge with 1 */
                 if(igraph_vector_size(&eids) > 0){
-                    SETEAS(igraph,"label",VECTOR(eids)[0],"1");
+                    setIGraphEdgeAttrS(igraph,"label",VECTOR(eids)[0],"1");
                 }
                 /* and the second with 0 */
                 if(igraph_vector_size(&eids)> 1){
-                    SETEAS(igraph,"label",VECTOR(eids)[1],"0");
+                    setIGraphEdgeAttrS(igraph,"label",VECTOR(eids)[1],"0");
                 }
                 break;
             }
@@ -255,11 +284,11 @@ void addLabels(int nodeid, igraph_t* igraph){
 
                 /* label the first edge with 1 */
                 if(igraph_vector_size(&eids) > 0){
-                    SETEAS(igraph,"label",VECTOR(eids)[0],"1");
+                    setIGraphEdgeAttrS(igraph,"label",VECTOR(eids)[0],"1");
                 }
                 /* and the second with 0 */
                 if(igraph_vector_size(&eids)> 1){
-                    SETEAS(igraph,"label",VECTOR(eids)[1],"0");
+                    setIGraphEdgeAttrS(igraph,"label",VECTOR(eids)[1],"0");
                 }
                 break;
             }
@@ -304,7 +333,7 @@ void addLabels(int nodeid, igraph_t* igraph){
     if(label){
         /* set the label of the current node as attribute  */
         /* to the corresponding node of the igraph */
-        SETVAS(igraph,"label",nodeid,label);
+        setIGraphNodeAttrS(igraph,"label",nodeid,label);
     }
 }
 
@@ -451,7 +480,7 @@ void addEdgeWithAttr(igraph_t* igraph, long sourceNodeId, long targetNodeId, cha
     igraph_add_edge(igraph,sourceNodeId,targetNodeId);
     igraph_get_eid(igraph, &eid,sourceNodeId,targetNodeId,1,0);
     /* set dependence attribute */
-    SETEAS(igraph,attr,eid,value);
+    setIGraphEdgeAttrS(igraph,attr,eid,value);
 }
 
 /**
@@ -560,7 +589,7 @@ int dependenceConflict(int node1, int node2, igraph_t* igraph){
 
         /* found a edge from the first to the second node */
         if(to == node2){
-            const char* type = EAS(igraph,"type",eid);
+            const char* type = getIGraphEdgeAttrS(igraph,"type",eid);
             /* check if type is set */
             if(type){
                 /* DEPENDENCY */
