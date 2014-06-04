@@ -113,11 +113,20 @@ int dependenceConflict(int node1, int node2, igraph_t* igraph);
 int conflict(PLpgSQL_stmt* stmt1, PLpgSQL_stmt* stmt2, igraph_t* igraph);
 
 
+void setIGraphGlobalAttrP(igraph_t* igraph, const char* name, void* pointer);
 void* getIGraphGlobalAttrP(igraph_t* igraph, const char* name);
+void setIGraphGlobalAttrL(igraph_t* igraph, const char* name, long value);
 long getIGraphGlobalAttrL(igraph_t* igraph, const char* name);
+void setIGraphGlobalAttrS(igraph_t* igraph, const char* name, char* value);
+const char* getIGraphGlobalAttrS(igraph_t* igraph, const char* name);
+void setIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid, void* pointer);
 void* getIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid);
+void setIGraphNodeAttrL(igraph_t* igraph, const char* name, long nodeid, long value);
 long getIGraphNodeAttrL(igraph_t* igraph, const char* name, long nodeid);
-
+void setIGraphNodeAttrS(igraph_t* igraph, const char* name, long nodeid, char* string);
+const char* getIGraphNodeAttrS(igraph_t* igraph, const char* name, long nodeid);
+void setIGraphEdgeAttrS(igraph_t* igraph, const char* name, long edgeid, char* string);
+const char* getIGraphEdgeAttrS(igraph_t* igraph, const char* name, long edgeid);
 /* ----------
  * Functions in pg_plsql_list_ops.c
  * ----------

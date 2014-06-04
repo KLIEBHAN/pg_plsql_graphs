@@ -9,14 +9,12 @@
 
 
 
-void* setIGraphGlobalAttrP(igraph_t* igraph, const char* name, void* pointer){
+void setIGraphGlobalAttrP(igraph_t* igraph, const char* name, void* pointer){
     union dblPointer data;
     data.pointer = pointer;;
 
     if(data.doublevalue == data.doublevalue)
         SETGAN(igraph,name,data.doublevalue);
-    else
-        return NULL;
 }
 
 
@@ -32,7 +30,7 @@ void* getIGraphGlobalAttrP(igraph_t* igraph, const char* name){
 
 
 
-void* setIGraphGlobalAttrL(igraph_t* igraph, const char* name, long value){
+void setIGraphGlobalAttrL(igraph_t* igraph, const char* name, long value){
     union dblPointer data;
     data.longvalue = value;
 
@@ -50,25 +48,23 @@ long getIGraphGlobalAttrL(igraph_t* igraph, const char* name){
 }
 
 
-void* setIGraphGlobalAttrS(igraph_t* igraph, const char* name, char* value){
+void setIGraphGlobalAttrS(igraph_t* igraph, const char* name, char* value){
 
     SETGAS(igraph,name,value);
 }
 
-char* getIGraphGlobalAttrS(igraph_t* igraph, const char* name){
+const char* getIGraphGlobalAttrS(igraph_t* igraph, const char* name){
     return GAS(igraph,name);
 }
 
 
-void* setIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid, void* pointer){
+void setIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid, void* pointer){
     union dblPointer data;
     data.pointer = pointer;
 
 
     if(data.doublevalue == data.doublevalue)/* valid pointer */
         SETVAN(igraph,name,nodeid,data.doublevalue);
-    else
-        return NULL;
 }
 
 void* getIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid){
@@ -83,7 +79,7 @@ void* getIGraphNodeAttrP(igraph_t* igraph, const char* name, long nodeid){
 }
 
 
-void* setIGraphNodeAttrL(igraph_t* igraph, const char* name, long nodeid, long value){
+void setIGraphNodeAttrL(igraph_t* igraph, const char* name, long nodeid, long value){
     union dblPointer data;
     data.longvalue = value;
 
@@ -103,22 +99,22 @@ long getIGraphNodeAttrL(igraph_t* igraph, const char* name, long nodeid){
 }
 
 
-void* setIGraphNodeAttrS(igraph_t* igraph, const char* name, long nodeid, char* string){
+void setIGraphNodeAttrS(igraph_t* igraph, const char* name, long nodeid, char* string){
     SETVAS(igraph,name,nodeid,string);
 }
 
 
-long getIGraphNodeAttrS(igraph_t* igraph, const char* name, long nodeid){
+const char* getIGraphNodeAttrS(igraph_t* igraph, const char* name, long nodeid){
     return VAS(igraph,name,nodeid);
 }
 
 
-void* setIGraphEdgeAttrS(igraph_t* igraph, const char* name, long edgeid, char* string){
+void setIGraphEdgeAttrS(igraph_t* igraph, const char* name, long edgeid, char* string){
     SETEAS(igraph,name,edgeid,string);
 }
 
 
-long getIGraphEdgeAttrS(igraph_t* igraph, const char* name, long edgeid){
+const char* getIGraphEdgeAttrS(igraph_t* igraph, const char* name, long edgeid){
     return EAS(igraph,name,edgeid);
 }
 
