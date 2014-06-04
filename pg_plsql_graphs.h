@@ -178,6 +178,7 @@ void setIGraphNodeAttrS(igraph_t* igraph, const char* name, long nodeid, char* s
 const char* getIGraphNodeAttrS(igraph_t* igraph, const char* name, long nodeid);
 void setIGraphEdgeAttrS(igraph_t* igraph, const char* name, long edgeid, char* string);
 const char* getIGraphEdgeAttrS(igraph_t* igraph, const char* name, long edgeid);
+void addEdgeWithAttr(igraph_t* igraph, long sourceNodeId, long targetNodeId, char* attr, char* value);
 void iterateIGraphNodes(igraph_t* igraph, void (*callback)(igraph_t*, long, Datum*, Datum*, bool),Datum* arguments, Datum* results, bool breakIfFound);
 void iterateIGraphOutEdges(igraph_t* igraph, long nodeid, void (*callback)(igraph_t*, long, long, long, Datum*, Datum*, bool),Datum* arguments, Datum* results, bool breakIfFound);
 void iterateReachableEdges(igraph_t* graph, void (*callback)(igraph_t*, long, long, long, Datum*, Datum*, bool),Datum* arguments, Datum* results, bool breakIfFound);
@@ -187,12 +188,12 @@ void iterateReachableEdges(igraph_t* graph, void (*callback)(igraph_t*, long, lo
  */
 void addLabels(int nodeid, igraph_t* igraph);
 void setReadsAndWrites(int nodeid, igraph_t* igraph);
-void createProgramDependenceGraph(igraph_t* igraph, long nodeid, Datum* argument, Datum* result, bool lastElem);
+void addDependenceEges(igraph_t* igraph, long nodeid, Datum* argument, Datum* result, bool lastElem);
 void retrieveNodeNumber(igraph_t* igraph, long nodeId, Datum* argument, Datum* result, bool lastElem);
-void addEdgeWithAttr(igraph_t* igraph, long sourceNodeId, long targetNodeId, char* attr, char* value);
 long getNodeNumberToStmt(PLpgSQL_stmt* stmt1, igraph_t* graph);
 int dependenceConflict(int node1, int node2, igraph_t* igraph);
 int conflict(PLpgSQL_stmt* stmt1, PLpgSQL_stmt* stmt2, igraph_t* igraph);
+void addProgramDependenceEdges(igraph_t* igraph);
 
 /* ----------
  * Functions in pg_plsql_list_ops.c

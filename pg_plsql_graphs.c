@@ -231,7 +231,7 @@ void createGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
     igraph_t* igraph = createFlowGraph(function,estate);
 
     /* perform depenence analysis operations on igraph */
-    iterateIGraphNodes(igraph,&createProgramDependenceGraph,NULL,NULL,0);
+    addProgramDependenceEdges(igraph);
 
 
     //iterateIGraphNodes(igraph,&printReadsAndWrites,NULL,NULL,0);

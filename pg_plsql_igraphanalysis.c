@@ -231,20 +231,11 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
 }
 
 
-void addEdgeWithAttr(igraph_t* igraph, long sourceNodeId, long targetNodeId, char* attr, char* value){
-
-    igraph_integer_t eid;
-    /* Add edge to the graph */
-    igraph_add_edge(igraph,sourceNodeId,targetNodeId);
-    igraph_get_eid(igraph, &eid,sourceNodeId,targetNodeId,1,0);
-    /* set dependence attribute */
-    setIGraphEdgeAttrS(igraph,attr,eid,value);
-}
 
 /**
- * Add WR, RW and WW dependence edges to the reachable nodes of the current node and therefore create a program depence graph
+ * Add WR, RW and WW dependence edges to the reachable nodes of the current node
  */
-void createProgramDependenceGraph(igraph_t* igraph, long nodeid, Datum* argument, Datum* result, bool lastElem){
+void addDependenceEges(igraph_t* igraph, long nodeid, Datum* argument, Datum* result, bool lastElem){
 
 
     PLpgSQL_function* function = getIGraphGlobalAttrP(igraph,"function");
@@ -294,6 +285,15 @@ void createProgramDependenceGraph(igraph_t* igraph, long nodeid, Datum* argument
     igraph_vector_destroy(&order);
 
 }
+
+
+/**
+ * Add dependency eges to the Graph and therefore create a program dependence graph
+ */
+void addProgramDependenceEdges(igraph_t* igraph){
+    iterateIGraphNodes(igraph,&addDependenceEges,NULL,NULL,0);
+}
+
 
 /**
  * if the statement of the current node equals the given node set the result to the node number

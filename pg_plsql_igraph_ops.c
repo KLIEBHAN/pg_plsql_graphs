@@ -120,6 +120,17 @@ const char* getIGraphEdgeAttrS(igraph_t* igraph, const char* name, long edgeid){
 
 
 
+void addEdgeWithAttr(igraph_t* igraph, long sourceNodeId, long targetNodeId, char* attr, char* value){
+
+    igraph_integer_t eid;
+    /* Add edge to the graph */
+    igraph_add_edge(igraph,sourceNodeId,targetNodeId);
+    igraph_get_eid(igraph, &eid,sourceNodeId,targetNodeId,1,0);
+    /* set dependence attribute */
+    setIGraphEdgeAttrS(igraph,attr,eid,value);
+}
+
+
 /**
  * iterates over the iGraph Nodes and calls a given callback function
  */
