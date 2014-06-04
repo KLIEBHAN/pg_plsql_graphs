@@ -448,8 +448,8 @@ void addEdgeWithAttr(igraph_t* igraph, long sourceNodeId, long targetNodeId, cha
 
     igraph_integer_t eid;
     /* Add edge to the graph */
-    igraph_add_edge(igraph,sourceNodeId,sourceNodeId);
-    igraph_get_eid(igraph, &eid,sourceNodeId,sourceNodeId,1,0);
+    igraph_add_edge(igraph,sourceNodeId,targetNodeId);
+    igraph_get_eid(igraph, &eid,sourceNodeId,targetNodeId,1,0);
     /* set dependence attribute */
     SETEAS(igraph,attr,eid,value);
 }
