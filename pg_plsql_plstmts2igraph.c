@@ -134,10 +134,10 @@ void createProgramGraph(int* newnodeid,
                 appendNewNodeAndConnectParents(newnodeid,status,stmt);
 
                 /* Parents after the fori node */
-                List* parentsAfterWhile = copy_list(status->parents);
+                List* parentsAfterFori = copy_list(status->parents);
 
                 /* remember the fori node id */
-                int whileNodeId = *newnodeid;
+                int foriNodeId = *newnodeid;
 
                 /* Progress the statements in the loop */
                 createProgramGraph( newnodeid,
@@ -146,10 +146,34 @@ void createProgramGraph(int* newnodeid,
                                     function);
 
                 /* connect the fori node id to the parents after the last fori node */
-                connectNodeToParents(whileNodeId,status->parents);
+                connectNodeToParents(foriNodeId,status->parents);
 
                 /* parents for upcoming statements are the parents after the fori node */
-                status->parents = parentsAfterWhile;
+                status->parents = parentsAfterFori;
+
+                break;
+            }
+            case PLPGSQL_STMT_FOREACH_A:{
+                /* Append the while statement an connect it to the parents */
+                appendNewNodeAndConnectParents(newnodeid,status,stmt);
+
+                /* Parents after the foreach node */
+                List* parentsAfterForEach = copy_list(status->parents);
+
+                /* remember the foreach node id */
+                int foreachNodeId = *newnodeid;
+
+                /* Progress the statements in the loop */
+                createProgramGraph( newnodeid,
+                                    status,
+                                    ((PLpgSQL_stmt_foreach_a*)stmt)->body,
+                                    function);
+
+                /* connect the foreach node id to the parents after the last foreach node */
+                connectNodeToParents(foreachNodeId,status->parents);
+
+                /* parents for upcoming statements are the parents after the foreach node */
+                status->parents = parentsAfterForEach;
 
                 break;
             }

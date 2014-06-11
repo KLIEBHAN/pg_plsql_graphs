@@ -21,8 +21,8 @@ CREATE VIEW pg_plsql_graphs(function_name, flow_graph_dot, program_dependence_gr
 -- Register a view on the function for ease of use.
 CREATE VIEW pg_plsql_graphs_trimmed(function_name, flow_graph_dot, program_dependence_graph_dot) AS
   SELECT 	function_name, 
-  			regexp_replace(flow_graph_dot, E'[\\n\\r]+', ' ', 'g' ), 
-  			regexp_replace(program_dependence_graph_dot , E'[\\n\\r]+', ' ', 'g' )
+  			regexp_replace(flow_graph_dot, E'[\\n\\r|\\t]+', ' ', 'g' ), 
+  			regexp_replace(program_dependence_graph_dot , E'[\\n\\r|\\t]+', ' ', 'g' )
   FROM pg_plsql_graphs;
   
 -- Register a view on the function for ease of use.

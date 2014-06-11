@@ -30,8 +30,8 @@ char* removeFromString(char* string,char* toRemove){
  */
 char* removeFromStringN(const char* string,char* toRemove){
     /* copy the given string to a new string */
-    char* newString = palloc(sizeof(string));
-    strcpy(newString,string);
+    char* newString = palloc(strlen(string));
+    strncpy(newString,string,strlen(string));
     /* removes the substring */
     removeSubstring(newString,toRemove);
     return newString;
