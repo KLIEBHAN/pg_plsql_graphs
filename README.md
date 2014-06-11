@@ -77,7 +77,7 @@ This simple function would generate the following **flow** and **dependence grap
 
 
 #### Dependence Graph
-![Dep. Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/ex2/dep.png)
+![Dep. Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/ex2/pdg.png)
 
 
 ##Configuration and Installation
