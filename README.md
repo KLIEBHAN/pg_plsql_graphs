@@ -39,11 +39,17 @@ This simple function would generate the following **flow** and **dependence grap
 
 ##Example 2
 
-The following shows a snippet of a more complex **plpgsql function**
+The following shows a more complex **plpgsql function**
 
 
 ```Sql
-...
+CREATE OR REPLACE FUNCTION doTest2() returns float AS $$
+DECLARE
+	prices decimal[];
+	price decimal;
+	pk int[];
+	size int;
+	overallprice decimal := 0;
 BEGIN
 	FOR i in 1..40 LOOP
 		pk := array_append(pk, i);
@@ -58,9 +64,10 @@ BEGIN
 	END LOOP;
 	  
 	  raise notice '%',overallprice;
-	  	
+	  
+	RETURN 0;
 END;
-...
+$$ LANGUAGE plpgsql;
 ```
 
 This simple function would generate the following **flow** and **dependence graphs** (here in **png** format)
