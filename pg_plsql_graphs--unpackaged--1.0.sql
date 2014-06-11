@@ -8,3 +8,5 @@ ALTER EXTENSION pg_plsql_graphs ADD view pg_plsql_graphs;
 ALTER EXTENSION pg_plsql_graphs ADD view pg_plsql_graphs_trimmed;
 ALTER EXTENSION pg_plsql_graphs ADD view pg_plsql_last_flowgraph_dot;
 ALTER EXTENSION pg_plsql_graphs ADD view pg_plsql_last_pdgs_dot;
+ALTER EXTENSION pg_plsql_graphs ADD view pg_plsql_last_flowgraph_dot_untrimmed;
+ALTER EXTENSION pg_plsql_graphs ADD view pg_plsql_last_pdgs_dot_untrimmed;

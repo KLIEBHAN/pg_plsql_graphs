@@ -1,0 +1,16 @@
+digraph g {
+nodesep=0.3;
+graph[pad="0.20,0.20"];
+edge[arrowsize=0.6,penwidth=0.6];
+node[fontsize=10];
+0[label="entry"][shape=box];
+1[label="FOR i in 1..40"][shape=box];
+2[label="pk := array_append(pk, i)"][shape=box];
+3[label="FOREACH size IN pk"][shape=box];
+4[label="SELECT  sum(P.p_retailprice) 
+             FROM  PART P
+    WHERE  P.p_size = size INTO price"][shape=box];
+5[label="overallprice := overallprice + price"][shape=box];
+6[label="RAISE"][shape=box];
+7[label="RETURN 0 "][shape=box];
+0 -> 1[penwidth=0.4][label=""][color=black]1 -> 2[penwidth=0.4][label="1"][color=black]1 -> 3[penwidth=0.4][label="0"][color=black]2 -> 1[penwidth=0.4][label=""][color=black]3 -> 4[penwidth=0.4][label="1"][color=black]3 -> 6[penwidth=0.4][label="0"][color=black]4 -> 5[penwidth=0.4][label=""][color=black]5 -> 3[penwidth=0.4][label=""][color=black]6 -> 7[penwidth=0.4][label=""][color=black]}
