@@ -10,7 +10,7 @@ Its main purpuse is to:
 - Make it possible to export these graphs to **dot** files that can be converted e.g. to **png** or **pdf** files
 
 
-##Example
+##Example 1
 The following shows a snippet of a simple **plpgsql function**
 
 ```Sql
@@ -30,11 +30,48 @@ END;
 This simple function would generate the following **flow** and **dependence graphs** (here in **png** format)
 
 #### Flow Graph
-![Flow Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/flow.png)
+![Flow Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/ex1/flow.png)
 
 
 #### Dependence Graph
-![Dep. Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/dep.png)
+![Dep. Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/ex1/dep.png)
+
+
+##Example 2
+
+The following shows a snippet of a more complex **plpgsql function**
+
+
+```Sql
+...
+BEGIN
+	FOR i in 1..40 LOOP
+		pk := array_append(pk, i);
+	END LOOP;
+	
+	FOREACH size IN array pk LOOP
+		SELECT 	sum(P.p_retailprice) 
+		INTO price FROM 	PART P
+	  	WHERE 	P.p_size = size;
+	  
+	  	overallprice := overallprice + price;
+	END LOOP;
+	  
+	  raise notice '%',overallprice;
+	  	
+END;
+...
+```
+
+This simple function would generate the following **flow** and **dependence graphs** (here in **png** format)
+
+#### Flow Graph
+![Flow Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/ex2/flow.png)
+
+
+#### Dependence Graph
+![Dep. Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/ex2/dep.png)
+
 
 ##Configuration and Installation
 
