@@ -259,6 +259,7 @@ static void pgpg_shmem_startup(){
  * Function hook before the execution of function
  */
 static void pgpg_func_beg(PLpgSQL_execstate *estate, PLpgSQL_function *func){
+    //analyse(estate,func);
 }
 
 
@@ -310,7 +311,6 @@ void createGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
                                 "splines=ortho;\n",/* ortho */
                                 NULL,/* no additional node attribs */
                                 MAXDOTFILESIZE);
-
 
 
 

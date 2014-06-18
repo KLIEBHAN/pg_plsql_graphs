@@ -123,8 +123,30 @@ void addLabels(int nodeid, igraph_t* igraph){
             case PLPGSQL_STMT_FORS:{
                 PLpgSQL_stmt_fors* forsStmt  = ((PLpgSQL_stmt_fors*)stmt);
 
-                sprintf(label,"FOR %s IN %s",
-                        forsStmt->rec->refname,
+
+                sprintf(label,"FOR ");
+
+                if(forsStmt->rec){
+
+                    sprintf(eos(label),"%s",varnumberToVarname( forsStmt->rec->dno,
+                                                                function->datums,
+                                                                function->ndatums)  );
+                }
+                else if(forsStmt->row){
+                    for(int i=0; i<forsStmt->row->nfields;i++){
+
+                        sprintf(eos(label),"%s",varnumberToVarname( forsStmt->row->varnos[i],
+                                                                    function->datums,
+                                                                    function->ndatums)  );
+
+                        if(i != forsStmt->row->nfields-1){
+                            sprintf(eos(label),",");
+                        }
+
+                    }
+                }
+
+                sprintf(eos(label)," IN %s",
                         forsStmt->query->query);
 
 
@@ -176,16 +198,32 @@ void addLabels(int nodeid, igraph_t* igraph){
                 PLpgSQL_stmt_execsql* execSqlStmt  = ((PLpgSQL_stmt_execsql*)stmt);
 
 
-                sprintf(label,"%s INTO ",execSqlStmt->sqlstmt->query);
 
-                for(int i=0;i<execSqlStmt->row->nfields;i++){
 
-                    sprintf(eos(label),"%s",varnumberToVarname( execSqlStmt->row->varnos[i],
-                                                                function->datums,
-                                                                function->ndatums)  );
+                sprintf(label,"%s",execSqlStmt->sqlstmt->query);
 
-                    if(i != execSqlStmt->row->nfields-1){
-                        sprintf(eos(label),",");
+
+                if(execSqlStmt->into){
+
+                    sprintf(eos(label)," INTO ");
+                    if(execSqlStmt->rec){
+
+                        sprintf(eos(label),"%s",varnumberToVarname( execSqlStmt->rec->dno,
+                                                                    function->datums,
+                                                                    function->ndatums)  );
+                    }
+                    else if(execSqlStmt->row){
+                        for(int i=0; i<execSqlStmt->row->nfields;i++){
+
+                            sprintf(eos(label),"%s",varnumberToVarname( execSqlStmt->row->varnos[i],
+                                                                        function->datums,
+                                                                        function->ndatums)  );
+
+                            if(i != execSqlStmt->row->nfields-1){
+                                sprintf(eos(label),",");
+                            }
+
+                        }
                     }
 
                 }
@@ -220,6 +258,11 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
     PLpgSQL_function* function = getIGraphGlobalAttrP(igraph,"function");
     PLpgSQL_execstate* estate = getIGraphGlobalAttrP(igraph,"estate");
     PLpgSQL_stmt* stmt = getIGraphNodeAttrP(igraph,"stmt",nodeid);
+
+
+    setIGraphNodeAttrP(igraph,"read",nodeid,NULL);
+    setIGraphNodeAttrP(igraph,"write",nodeid,NULL);
+
 
     /* switch statement type */
     if(stmt && stmt->cmd_type){
@@ -314,6 +357,19 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
                 setIGraphNodeAttrP(igraph,"read",nodeid,bms);
 
 
+
+                if(forsStmt->row){
+                    /* get the variables the fors stmt writes as Bitmapset and set them as our write variables */
+                    Bitmapset* bmsWrite = intArrayToBitmapSet(forsStmt->row->varnos,forsStmt->row->nfields);
+
+                    setIGraphNodeAttrP(igraph,"write",nodeid,bmsWrite);
+                }
+                else if(forsStmt->rec){
+                    setIGraphNodeAttrP(igraph,"write",nodeid,bms_copy(bms_make_singleton(forsStmt->rec->dno)));
+                }
+
+
+
                 break;
             }
             case PLPGSQL_STMT_FOREACH_A:{
@@ -350,11 +406,17 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
                 PLpgSQL_stmt_execsql* execSqlStmt  = ((PLpgSQL_stmt_execsql*)stmt);
 
 
+                if(execSqlStmt->into){
 
-                /* get the variables the exec stmt writes as Bitmapset and set them as our write variables */
-                Bitmapset* bmsWrite = intArrayToBitmapSet(execSqlStmt->row->varnos,execSqlStmt->row->nfields);
-                setIGraphNodeAttrP(igraph,"write",nodeid,bmsWrite);
-
+                    if(execSqlStmt->row){
+                        /* get the variables the exec stmt writes as Bitmapset and set them as our write variables */
+                        Bitmapset* bmsWrite = intArrayToBitmapSet(execSqlStmt->row->varnos,execSqlStmt->row->nfields);
+                        setIGraphNodeAttrP(igraph,"write",nodeid,bmsWrite);
+                    }
+                    else if(execSqlStmt->rec){
+                        setIGraphNodeAttrP(igraph,"write",nodeid,bms_copy(bms_make_singleton(execSqlStmt->rec->dno)));
+                    }
+                }
 
                 /* Get the parameters of the query of the sql statement. Those are our read variables */
                 Bitmapset* bmsRead = bms_copy(getParametersOfQueryExpr( execSqlStmt->sqlstmt,

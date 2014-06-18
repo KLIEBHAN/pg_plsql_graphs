@@ -19,9 +19,9 @@ List* copy_list(List* parents){
 
 
 Bitmapset* intArrayToBitmapSet(int* array, int size){
-    Bitmapset* bms = palloc(sizeof(Bitmapset));
+    Bitmapset* bms = NULL;
     for(int i=0;i<size;i++){
-        bms_add_member(bms,array[i]);
+        bms = bms_add_member(bms,array[i]);
     }
     return bms;
 }

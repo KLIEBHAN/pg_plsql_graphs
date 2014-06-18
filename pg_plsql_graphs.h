@@ -174,3 +174,11 @@ Bitmapset* getParametersOfQueryExpr(PLpgSQL_expr*         expr,
                                     PLpgSQL_function*     surroundingFunction,
                                     PLpgSQL_execstate*     estate);
 void pg_plsql_parser_setup(struct ParseState *pstate, PLpgSQL_expr *expr);
+
+
+/* ----------
+ * Functions in pg_plsql_program_conversion.c
+ * ----------
+ */
+void analyse(PLpgSQL_execstate *estate, PLpgSQL_function *func);
+

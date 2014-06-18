@@ -18,7 +18,7 @@ void printReadsAndWrites(igraph_t* graph, long nodeid, Datum* arguments, Datum* 
 
     Bitmapset* bmsRead = bms_copy(getIGraphNodeAttrP(graph,"read",nodeid));
     int dno;
-    while (bmsRead != NULL && !bms_is_empty(bmsRead) && (dno = bms_first_member(bmsRead)) >= 0){
+    while (!bms_is_empty(bmsRead) && (dno = bms_first_member(bmsRead)) >= 0){
         PLpgSQL_datum *datum = function->datums[dno];
 
         if (datum->dtype == PLPGSQL_DTYPE_VAR)
@@ -31,7 +31,7 @@ void printReadsAndWrites(igraph_t* graph, long nodeid, Datum* arguments, Datum* 
 
 
     Bitmapset* bmsWrite = bms_copy(getIGraphNodeAttrP(graph,"write",nodeid));
-    while (bmsWrite != NULL && !bms_is_empty(bmsWrite) && (dno = bms_first_member(bmsWrite)) >= 0){
+    while (!bms_is_empty(bmsWrite) && (dno = bms_first_member(bmsWrite)) >= 0){
         PLpgSQL_datum *datum = function->datums[dno];
 
         if (datum->dtype == PLPGSQL_DTYPE_VAR)
