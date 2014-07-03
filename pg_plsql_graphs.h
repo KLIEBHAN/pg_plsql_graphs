@@ -24,10 +24,3 @@
 void createGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate);
 
 
-
-/* ----------
- * Functions in pg_plsql_program_conversion.c
- * ----------
- */
-void analyse(PLpgSQL_execstate *estate, PLpgSQL_function *func);
-

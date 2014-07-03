@@ -12,7 +12,6 @@ MODULE_big = pg_plsql_graphs
 
 
 OBJS	=  pg_plsql_graphs.o\
- pg_plsql_program_conversion.o\
  pg_plsql_graphs_lib/pg_plsql_stmt_ops.o\
  pg_plsql_graphs_lib/pg_plsql_graph_ops.o\
  pg_plsql_graphs_lib/pg_plsql_plstmts2igraph.o\
