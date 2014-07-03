@@ -268,7 +268,7 @@ static void pgpg_func_beg(PLpgSQL_execstate *estate, PLpgSQL_function *func){
  */
 static void pgpg_func_end(PLpgSQL_execstate *estate, PLpgSQL_function *func){
     /* creates a graph for the current function */
-    //createGraph(func,estate);
+    createGraph(func,estate);
 }
 
 /**

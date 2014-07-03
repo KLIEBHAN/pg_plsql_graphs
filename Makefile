@@ -12,15 +12,15 @@ MODULE_big = pg_plsql_graphs
 
 
 OBJS	=  pg_plsql_graphs.o\
- pg_plsql_graphs_lib/pg_plsql_stmt_ops.o\
- pg_plsql_graphs_lib/pg_plsql_graph_ops.o\
- pg_plsql_graphs_lib/pg_plsql_plstmts2igraph.o\
- pg_plsql_graphs_lib/pg_plsql_igraph_ops.o\
- pg_plsql_graphs_lib/pg_plsql_igraph_export.o\
- pg_plsql_graphs_lib/pg_plsql_igraphanalysis.o\
- pg_plsql_graphs_lib/pg_plsql_list_ops.o\
- pg_plsql_graphs_lib/pg_plsql_string_ops.o\
- pg_plsql_graphs_lib/pg_plsql_expr_evaluation.o
+ pl_graphs/pg_plsql_stmt_ops.o\
+ pl_graphs/pg_plsql_graph_ops.o\
+ pl_graphs/pg_plsql_plstmts2igraph.o\
+ pl_graphs/pg_plsql_igraph_ops.o\
+ pl_graphs/pg_plsql_igraph_export.o\
+ pl_graphs/pg_plsql_igraphanalysis.o\
+ pl_graphs/pg_plsql_list_ops.o\
+ pl_graphs/pg_plsql_string_ops.o\
+ pl_graphs/pg_plsql_expr_evaluation.o
 
 EXTENSION = pg_plsql_graphs
 DATA = pg_plsql_graphs--1.0.sql pg_plsql_graphs--unpackaged--1.0.sql
