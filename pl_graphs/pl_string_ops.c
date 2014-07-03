@@ -2,7 +2,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "pg_plsql_graphs_lib.h"
+#include "pl_graphs.h"
 
 /**
  * removes a substring of a cstring

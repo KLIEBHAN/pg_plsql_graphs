@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <igraph/igraph.h>
-#include "pg_plsql_graphs_lib.h"
+#include "pl_graphs.h"
 #include "storage/fd.h"
 /**
  * Prints out the variables that staments read and write to
