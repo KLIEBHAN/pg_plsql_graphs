@@ -27,7 +27,7 @@ DATA = pg_plsql_graphs--1.0.sql pg_plsql_graphs--unpackaged--1.0.sql
 
 LIBS += -L$(top_builddir)/lib 
 SHLIB_LINK =-ligraph
-PG_CPPFLAGS  += -I$(srcdir) -I$(srcdir)/pg_plsql_graphs_lib -I$(top_builddir)/src/pl/plpgsql/src/
+PG_CPPFLAGS  += -I$(srcdir) -I$(top_builddir)/src/pl/plpgsql/src/
 
 
 

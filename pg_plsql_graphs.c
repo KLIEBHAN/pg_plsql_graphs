@@ -43,7 +43,7 @@
 #include "mb/pg_wchar.h"
 #include "miscadmin.h"
 #include "pg_plsql_graphs.h"
-#include "pg_plsql_graphs_lib.h"
+#include "pl_graphs/pg_plsql_graphs_lib.h"
 PG_MODULE_MAGIC;
 
 
