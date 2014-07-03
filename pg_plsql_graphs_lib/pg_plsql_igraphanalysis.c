@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <igraph/igraph.h>
-#include "pg_plsql_graphs.h"
+#include "pg_plsql_graphs_lib.h"
 
 
 
@@ -126,7 +126,7 @@ void addLabels(int nodeid, igraph_t* igraph){
 
                 sprintf(label,"FOR ");
 
-                if(forsStmt->rec){
+                if(forsStmt->rec && forsStmt->rec->dno){
 
                     sprintf(eos(label),"%s",varnumberToVarname( forsStmt->rec->dno,
                                                                 function->datums,

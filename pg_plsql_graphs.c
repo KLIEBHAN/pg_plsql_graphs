@@ -43,6 +43,7 @@
 #include "mb/pg_wchar.h"
 #include "miscadmin.h"
 #include "pg_plsql_graphs.h"
+#include "pg_plsql_graphs_lib.h"
 PG_MODULE_MAGIC;
 
 
@@ -259,7 +260,6 @@ static void pgpg_shmem_startup(){
  * Function hook before the execution of function
  */
 static void pgpg_func_beg(PLpgSQL_execstate *estate, PLpgSQL_function *func){
-    //analyse(estate,func);
 }
 
 
