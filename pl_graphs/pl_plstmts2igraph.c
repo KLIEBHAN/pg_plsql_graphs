@@ -226,6 +226,10 @@ void createProgramGraph(int* newnodeid,
                 /* Append the exec sql statement an connect it to the parents */
                 appendNewNodeAndConnectParents(newnodeid,status,stmt);
                 break;
+            case PLPGSQL_STMT_PERFORM:
+                /* Append the perform sql statement an connect it to the parents */
+                appendNewNodeAndConnectParents(newnodeid,status,stmt);
+                break;
             default:
                 printf("Unsupported Statement %i\n",stmt->cmd_type);
                 break;

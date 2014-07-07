@@ -29,7 +29,7 @@ void addLabels(int nodeid, igraph_t* igraph){
         setIGraphEdgeAttrS(igraph,"label",VECTOR(eids)[i],"");
     }
 
-    char* label = palloc(200*sizeof(char));
+    char* label = palloc(1024*sizeof(char));
 
     if(nodeid == 0){
         label = "entry";
@@ -229,6 +229,11 @@ void addLabels(int nodeid, igraph_t* igraph){
                 }
                 break;
             }
+            case PLPGSQL_STMT_PERFORM:{
+                PLpgSQL_stmt_perform* performSqlStmt  = ((PLpgSQL_stmt_perform*)stmt);
+                sprintf(label,"%s",performSqlStmt->expr->query);
+                break;
+            }
             default:{
                 /* unsupported command */
                 label = "unknown";
@@ -426,6 +431,16 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
                 setIGraphNodeAttrP(igraph,"read",nodeid,bmsRead);
 
 
+                break;
+            }
+            case PLPGSQL_STMT_PERFORM:{
+                PLpgSQL_stmt_perform* performSqlStmt  = ((PLpgSQL_stmt_perform*)stmt);
+                /* Get the parameters of the query of the sql statement. Those are our read variables */
+                Bitmapset* bmsRead = bms_copy(getParametersOfQueryExpr( performSqlStmt->expr,
+                                                                    function,
+                                                                    estate));
+                /* Set the read variables of the statement */
+                setIGraphNodeAttrP(igraph,"read",nodeid,bmsRead);
                 break;
             }
             default:
