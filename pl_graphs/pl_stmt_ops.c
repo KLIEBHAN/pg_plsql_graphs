@@ -7,6 +7,17 @@
 #include "pl_graphs.h"
 #include "catalog/pg_type.h"
 
+/**
+ * Workaround to get the parameters of a query as Bitmapset
+ */
+Bitmapset* getParametersOfQueryExpr(PLpgSQL_expr*         expr,
+                                    PLpgSQL_function*     surroundingFunction,
+                                    PLpgSQL_execstate*     estate){
+
+        return expr->paramnos;
+}
+
+
 
 /*
  * Build a row-variable data structure given the component variables.
@@ -64,18 +75,18 @@ build_row_from_vars(PLpgSQL_variable **vars, int numvars)
                            0);
         TupleDescInitEntryCollation(row->rowtupdesc, i + 1, typcoll);
     }
-
     return row;
 }
 
 
 
 PLpgSQL_variable** varnumbersToVariables(int* varnos, int nfields,PLpgSQL_function* surroundingFunc){
-    PLpgSQL_variable** vars = palloc(nfields*sizeof(PLpgSQL_variable*));
+    PLpgSQL_variable** vars = palloc0(nfields*sizeof(PLpgSQL_variable*));
 
     for(int i=0;i<nfields;i++){
         vars[i] = varnumberToVariable(varnos[i],surroundingFunc);
     }
+
     return vars;
 }
 
@@ -97,6 +108,7 @@ PLpgSQL_variable* varnumberToVariable(int varno,PLpgSQL_function* surroundingFun
     }
     return (PLpgSQL_variable*)NULL;
 }
+
 
 
 /**

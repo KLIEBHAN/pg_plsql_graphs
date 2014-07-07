@@ -19,8 +19,7 @@ OBJS	=  pg_plsql_graphs.o\
  pl_graphs/pl_igraph_export.o\
  pl_graphs/pl_igraphanalysis.o\
  pl_graphs/pl_list_ops.o\
- pl_graphs/pl_string_ops.o\
- pl_graphs/pl_expr_evaluation.o
+ pl_graphs/pl_string_ops.o
 
 EXTENSION = pg_plsql_graphs
 DATA = pg_plsql_graphs--1.0.sql pg_plsql_graphs--unpackaged--1.0.sql

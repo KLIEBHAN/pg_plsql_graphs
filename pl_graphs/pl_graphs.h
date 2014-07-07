@@ -47,7 +47,7 @@ union dblPointer{
 
 
 /* ----------
- * Functions in pg_plsql_stmt_ops.c
+ * Functions in pl_stmt_ops.c
  * ----------
  */
 PLpgSQL_row *build_row_from_vars(PLpgSQL_variable **vars, int numvars);
@@ -57,7 +57,7 @@ char* varnumberToVarname(int varno,PLpgSQL_datum** datums, int ndatums);
 bool containsSameVariable(Bitmapset* bms1,Bitmapset* bms2,PLpgSQL_function* function);
 
 /* ----------
- * Functions in pg_plsql_graph_ops.c
+ * Functions in pl_graph_ops.c
  * ----------
  */
 void connectNodeToParents(int nodeid, List* parents);
@@ -147,15 +147,3 @@ Bitmapset* intArrayToBitmapSet(int* array, int size);
 void removeSubstring(char *s,const char *toremove);
 char* removeFromString(char* string,char* toRemove);
 char* removeFromStringN(const char* string,char* toRemove);
-
-
-
-/* ----------
- * Functions in pl_expr_evaluation.c
- * ----------
- */
-
-Bitmapset* getParametersOfQueryExpr(PLpgSQL_expr*         expr,
-                                    PLpgSQL_function*     surroundingFunction,
-                                    PLpgSQL_execstate*     estate);
-void pg_plsql_parser_setup(struct ParseState *pstate, PLpgSQL_expr *expr);
