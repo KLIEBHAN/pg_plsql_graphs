@@ -277,7 +277,7 @@ static void pgpg_func_end(PLpgSQL_execstate *estate, PLpgSQL_function *func){
 void createGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
 
     /* convert the statements to an flow-graph */
-    igraph_t* igraph = createFlowGraph(function,estate);
+    igraph_t* igraph = createFlowGraph(function->datums,function->ndatums,function,estate);
 
     /* perform depenence analysis operations on igraph */
     addProgramDependenceEdges(igraph);

@@ -16,9 +16,8 @@ void addLabels(int nodeid, igraph_t* igraph){
 
 
 
-    PLpgSQL_function* function = getIGraphGlobalAttrP(igraph,"function");
     PLpgSQL_stmt* stmt = getIGraphNodeAttrP(igraph,"stmt",nodeid);
-
+    PLpgSQL_datum**         datums = getIGraphGlobalAttrP(igraph,"datums");
 
     igraph_vector_t eids;
     igraph_vector_init(&eids, 0);
@@ -47,8 +46,7 @@ void addLabels(int nodeid, igraph_t* igraph){
 
                 sprintf(label,"%s := %s",
                         varnumberToVarname( assignment->varno,
-                                            function->datums,
-                                            function->ndatums),
+                                            datums),
                         expr->query);
 
 
@@ -129,15 +127,13 @@ void addLabels(int nodeid, igraph_t* igraph){
                 if(forsStmt->rec && forsStmt->rec->dno){
 
                     sprintf(eos(label),"%s",varnumberToVarname( forsStmt->rec->dno,
-                                                                function->datums,
-                                                                function->ndatums)  );
+                                                                datums    ));
                 }
                 else if(forsStmt->row){
                     for(int i=0; i<forsStmt->row->nfields;i++){
 
                         sprintf(eos(label),"%s",varnumberToVarname( forsStmt->row->varnos[i],
-                                                                    function->datums,
-                                                                    function->ndatums)  );
+                                                                    datums  ));
 
                         if(i != forsStmt->row->nfields-1){
                             sprintf(eos(label),",");
@@ -166,7 +162,7 @@ void addLabels(int nodeid, igraph_t* igraph){
                 PLpgSQL_stmt_foreach_a* foreachStmt  = ((PLpgSQL_stmt_foreach_a*)stmt);
 
                 sprintf(label,"FOREACH %s IN %s",
-                        varnumberToVarname(foreachStmt->varno,function->datums,function->ndatums),
+                        varnumberToVarname(foreachStmt->varno,datums),
                         foreachStmt->expr->query);
 
                 label = removeFromString(label,"SELECT ");
@@ -209,15 +205,13 @@ void addLabels(int nodeid, igraph_t* igraph){
                     if(execSqlStmt->rec){
 
                         sprintf(eos(label),"%s",varnumberToVarname( execSqlStmt->rec->dno,
-                                                                    function->datums,
-                                                                    function->ndatums)  );
+                                                                    datums)  );
                     }
                     else if(execSqlStmt->row){
                         for(int i=0; i<execSqlStmt->row->nfields;i++){
 
                             sprintf(eos(label),"%s",varnumberToVarname( execSqlStmt->row->varnos[i],
-                                                                        function->datums,
-                                                                        function->ndatums)  );
+                                                                        datums)  );
 
                             if(i != execSqlStmt->row->nfields-1){
                                 sprintf(eos(label),",");
@@ -263,7 +257,8 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
     PLpgSQL_function* function = getIGraphGlobalAttrP(igraph,"function");
     PLpgSQL_execstate* estate = getIGraphGlobalAttrP(igraph,"estate");
     PLpgSQL_stmt* stmt = getIGraphNodeAttrP(igraph,"stmt",nodeid);
-
+    PLpgSQL_datum**         datums = getIGraphGlobalAttrP(igraph,"datums");
+    int                     ndatums = getIGraphGlobalAttrL(igraph,"ndatums");
 
     setIGraphNodeAttrP(igraph,"read",nodeid,NULL);
     setIGraphNodeAttrP(igraph,"write",nodeid,NULL);
@@ -280,6 +275,8 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
 
                 /* Get the parameters of the query of the assignment. Those are our read variables */
                 Bitmapset* bms = bms_copy(getParametersOfQueryExpr( assignment->expr,
+                                                                    datums,
+                                                                    ndatums,
                                                                     function,
                                                                     estate));
                 /* Set the read variables of the statement */
@@ -294,6 +291,8 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
 
                 /* Get the parameters of the query of the if statement. Those are our read variables */
                 Bitmapset* bms = bms_copy(getParametersOfQueryExpr( ifStmt->cond,
+                                                                    datums,
+                                                                    ndatums,
                                                                     function,
                                                                     estate));
                  /* Set the read variables of the statement */
@@ -306,6 +305,8 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
 
                 /* Get the parameters of the query of the while statement. Those are our read variables */
                 Bitmapset* bms = bms_copy(getParametersOfQueryExpr( whileStmt->cond,
+                                                                    datums,
+                                                                    ndatums,
                                                                     function,
                                                                     estate));
                 /* Set the read variables of the statement */
@@ -325,15 +326,21 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
 
                 if(foriStmt->lower != NULL)
                     bms = bms_union(bms,getParametersOfQueryExpr( foriStmt->lower,
+                                                                        datums,
+                                                                        ndatums,
                                                                         function,
                                                                         estate));
                 if(foriStmt->upper != NULL)
                     bms = bms_union(bms,getParametersOfQueryExpr( foriStmt->upper,
+                                                                        datums,
+                                                                        ndatums,
                                                                         function,
                                                                         estate));
 
                 if(foriStmt->step != NULL)
                     bms = bms_union(bms,getParametersOfQueryExpr( foriStmt->step,
+                                                                    datums,
+                                                                    ndatums,
                                                                     function,
                                                                     estate));
 
@@ -354,6 +361,8 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
 
                 /* Get the parameters of the query of the statement. Those are our read variables */
                 Bitmapset* bms = bms_copy(getParametersOfQueryExpr( forsStmt->query,
+                                                                    datums,
+                                                                    ndatums,
                                                                     function,
                                                                     estate));
 
@@ -382,6 +391,8 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
 
                 /* Get the parameters of the query of the statement. Those are our read variables */
                 Bitmapset* bms = bms_copy(getParametersOfQueryExpr( foreachStmt->expr,
+                                                                    datums,
+                                                                    ndatums,
                                                                     function,
                                                                     estate));
 
@@ -400,6 +411,8 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
 
                 /* Get the parameters of the query of the return statement. Those are our read variables */
                 Bitmapset* bms = bms_copy(getParametersOfQueryExpr( returnStmt->expr,
+                                                                    datums,
+                                                                    ndatums,
                                                                     function,
                                                                     estate));
                 /* Set the read variables of the statement */
@@ -425,6 +438,8 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
 
                 /* Get the parameters of the query of the sql statement. Those are our read variables */
                 Bitmapset* bmsRead = bms_copy(getParametersOfQueryExpr( execSqlStmt->sqlstmt,
+                                                                    datums,
+                                                                    ndatums,
                                                                     function,
                                                                     estate));
                 /* Set the read variables of the statement */
@@ -437,6 +452,8 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
                 PLpgSQL_stmt_perform* performSqlStmt  = ((PLpgSQL_stmt_perform*)stmt);
                 /* Get the parameters of the query of the sql statement. Those are our read variables */
                 Bitmapset* bmsRead = bms_copy(getParametersOfQueryExpr( performSqlStmt->expr,
+                                                                    datums,
+                                                                    ndatums,
                                                                     function,
                                                                     estate));
                 /* Set the read variables of the statement */
@@ -459,9 +476,9 @@ void setReadsAndWrites(int nodeid, igraph_t* igraph){
 void addDependenceEges(igraph_t* igraph, long nodeid, Datum* argument, Datum* result, bool lastElem){
 
 
-    PLpgSQL_function* function = getIGraphGlobalAttrP(igraph,"function");
     Bitmapset* writeBms1 = getIGraphNodeAttrP(igraph,"write",nodeid);
     Bitmapset* readBms1 = getIGraphNodeAttrP(igraph,"read",nodeid);
+    PLpgSQL_datum**         datums = getIGraphGlobalAttrP(igraph,"datums");
 
     if(nodeid == 0 || (writeBms1 == NULL && readBms1 == NULL)){
         return;
@@ -485,19 +502,19 @@ void addDependenceEges(igraph_t* igraph, long nodeid, Datum* argument, Datum* re
             Bitmapset* readBms2 = getIGraphNodeAttrP(igraph,"read",vid);
             Bitmapset* writeBms2 = getIGraphNodeAttrP(igraph,"write",vid);
 
-            if(containsSameVariable(writeBms1,readBms2,function)){
+            if(containsSameVariable(writeBms1,readBms2,datums)){
                 /* read -> write dependency, add edge */
                 addEdgeWithAttr(igraph,nodeid,vid,"type","WR-DEPENDENCE");
             }
 
 
-            if(containsSameVariable(writeBms1,writeBms2,function)){
+            if(containsSameVariable(writeBms1,writeBms2,datums)){
                 /* write -> write dependency, add edge */
                 addEdgeWithAttr(igraph,nodeid,vid,"type","WW-DEPENDENCE");
             }
 
 
-            if(containsSameVariable(readBms1,writeBms2,function)){
+            if(containsSameVariable(readBms1,writeBms2,datums)){
                 /* write -> read dependency, add edge */
                 addEdgeWithAttr(igraph,nodeid,vid,"type","RW-DEPENDENCE");
             }

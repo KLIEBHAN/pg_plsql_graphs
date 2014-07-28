@@ -51,10 +51,15 @@ union dblPointer{
  * ----------
  */
 PLpgSQL_row *build_row_from_vars(PLpgSQL_variable **vars, int numvars);
-PLpgSQL_variable** varnumbersToVariables(int* varnos, int nfields,PLpgSQL_function* surroundingFunc);
-PLpgSQL_variable* varnumberToVariable(int varno,PLpgSQL_function* surroundingFunc);
-char* varnumberToVarname(int varno,PLpgSQL_datum** datums, int ndatums);
-bool containsSameVariable(Bitmapset* bms1,Bitmapset* bms2,PLpgSQL_function* function);
+PLpgSQL_variable** varnumbersToVariables(int* varnos, int nfields,PLpgSQL_datum** datums);
+PLpgSQL_variable* varnumberToVariable(int varno,PLpgSQL_datum** datums);
+char* varnumberToVarname(int varno,PLpgSQL_datum** datums);
+bool containsSameVariable(Bitmapset* bms1,Bitmapset* bms2,PLpgSQL_datum** datums);
+Bitmapset* getParametersOfQueryExpr(PLpgSQL_expr*           expr,
+                                    PLpgSQL_datum**         datums,
+                                    int                     ndatums,
+                                    PLpgSQL_function*       surroundingFunction,
+                                    PLpgSQL_execstate*      estate);
 
 /* ----------
  * Functions in pl_graph_ops.c
@@ -69,7 +74,11 @@ struct edge* getNthEdgeFromNode(List* nodes, long int nodeid, int n);
  * Functions in pl_plstmts2igraph.c
  * ----------
  */
-igraph_t* createFlowGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate);
+igraph_t* createFlowGraph(
+                            PLpgSQL_datum**         datums,
+                            int                     ndatums,
+                            PLpgSQL_function* function,
+                            PLpgSQL_execstate *estate);
 struct graph_status* initStatus(int initnodeid);
 void appendNewNodeAndConnectParents(int* newnodeid,
                                     struct graph_status* status,
@@ -78,7 +87,11 @@ void createProgramGraph(int* newnodeid,
                     struct graph_status* status,
                     List* statements,
                     PLpgSQL_function* function);
-igraph_t* buildIGraph(List* nodes,PLpgSQL_function* function,PLpgSQL_execstate * estate);
+igraph_t* buildIGraph(List* nodes,
+                      PLpgSQL_datum**         datums,
+                      int                     ndatums,
+                      PLpgSQL_function* function,
+                      PLpgSQL_execstate * estate);
 
 /* ----------
  * Functions in pl_igraph_export.c

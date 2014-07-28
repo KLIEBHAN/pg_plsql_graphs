@@ -242,6 +242,8 @@ void createProgramGraph(int* newnodeid,
  * Build the igraph
  */
 igraph_t* buildIGraph(List* nodes,
+                      PLpgSQL_datum**         datums,
+                      int                     ndatums,
                       PLpgSQL_function* function,
                       PLpgSQL_execstate * estate){
 
@@ -258,6 +260,8 @@ igraph_t* buildIGraph(List* nodes,
 
     setIGraphGlobalAttrP(graph,"function",function);
     setIGraphGlobalAttrP(graph,"estate",estate);
+    setIGraphGlobalAttrP(graph,"datums",datums);
+    setIGraphGlobalAttrL(graph,"ndatums",ndatums);
 
     ListCell* node;
     /* iterate over nodes */
@@ -303,7 +307,11 @@ igraph_t* buildIGraph(List* nodes,
     return graph;
 }
 
-igraph_t* createFlowGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
+igraph_t* createFlowGraph(
+                            PLpgSQL_datum**         datums,
+                            int                     ndatums,
+                            PLpgSQL_function* function,
+                            PLpgSQL_execstate *estate){
     /* ignore errors */
     igraph_set_error_handler(igraph_error_handler_printignore);
 
@@ -314,7 +322,7 @@ igraph_t* createFlowGraph(PLpgSQL_function* function,PLpgSQL_execstate *estate){
 
 
     /* convert the graph to an igraph */
-    return buildIGraph(status->nodes,function,estate);
+    return buildIGraph(status->nodes,datums,ndatums,function,estate);
 
 }
 
