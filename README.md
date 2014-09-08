@@ -27,7 +27,7 @@ END;
 ...
 ```
 
-This simple function would generate the following **flow** and **dependence graphs** (here in **png** format)
+This function would generate the following **flow** and **dependence graphs** (here in **png** format)
 
 #### Flow Graph
 ![Flow Graph](https://raw.githubusercontent.com/BA-KLI/pg_plsql_graphs/master/examples/ex1/flow.png)
